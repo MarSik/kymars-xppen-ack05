@@ -1,3 +1,5 @@
+use std::time;
+
 use xppen_act05::xppen_hid::XpPenAct05;
 use xppen_act05::virtual_keyboard::VirtualKeyboard;
 use xppen_act05::kbd_events::ChangeDetector;
@@ -30,7 +32,7 @@ fn main() {
 
         // Emit virtual keys
         while let Some(ev) = xppen_events.next() {
-            layout.process_keyevent(ev);
+            layout.process_keyevent(ev, time::Instant::now());
             layout.render(|k, s| kbd.emit_key(k, s));
         }
     }

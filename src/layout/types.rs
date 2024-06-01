@@ -1,10 +1,10 @@
-use std::{collections::{BTreeMap, BTreeSet}, time::Duration};
+use std::{collections::{BTreeMap, BTreeSet}, time::{Duration, Instant}};
 
 use evdev::Key;
 
 use super::layer::Layer;
 
-pub type LayerId = u16;
+pub type LayerId = usize;
 pub type EventCount = u32;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -12,11 +12,15 @@ pub enum LayerStatus {
     LayerActive,
     LayerPassthrough,
     LayerActiveUntilKeyRelease(KeyCoords),
-    LayerActiveUntilAnyKeyReleaseBut(KeyCoords),
+    LayerActiveUntilKeyReleaseTap(KeyCoords),
+    LayerActiveUntilAnyKeyPress,
+    LayerHoldAndTapToL(KeyCoords, Instant, LayerId),
+    LayerHoldAndTapKey(KeyCoords, Instant, LayerId), // The key action is retrieved from the keymap
     LayerDisabled,
 }
 
-pub type KeyCoords = (u8, u8, u8); // Block, row, column
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct KeyCoords(pub u8, pub u8, pub u8); // Block, row, column
 
 pub type Keymap = Vec<Vec<Vec<KeymapEvent>>>; // [Block, Row, Col] - > default KeyEvent(None)
 
@@ -35,4 +39,7 @@ pub enum KeymapEvent {
     Ldisable(LayerId),
     Lhold(LayerId),
     Ltap(LayerId),
+    LhtL(LayerId, LayerId),
+    LhtK(LayerId, Key),
+    LhtKg(LayerId, Vec<Key>),
 }

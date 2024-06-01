@@ -15,6 +15,9 @@ pub struct Layer {
     // A key event to send when this layer is active
     pub(crate) on_active_keys: Vec<Key>,
 
+    // Are active keys disabled when a key is pressed when the layer is active?
+    pub(crate) disable_active_on_press: bool,
+
     // A layer switch when timer expires
     pub(crate) on_timeout_layer: Option<LayerId>,
 
@@ -53,6 +56,10 @@ impl Layer {
                         KeymapEvent::Kms(km, kc) => {
                             keys.extend(km);
                             keys.extend(kc);
+                        },
+                        KeymapEvent::LhtK(_, k) => keys.push(*k),
+                        KeymapEvent::LhtKg(_, ks) => {
+                            keys.extend(ks);
                         },
                         _ => {}
                     }

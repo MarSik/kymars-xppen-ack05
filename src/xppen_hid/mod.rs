@@ -26,7 +26,7 @@ pub enum XpPenButtons {
 
 impl Into<KeyCoords> for XpPenButtons {
     fn into(self) -> KeyCoords {
-        return (0, 0, self as u8)
+        return KeyCoords(0, 0, self as u8)
     }
 }
 
