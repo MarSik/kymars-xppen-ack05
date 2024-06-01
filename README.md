@@ -20,7 +20,7 @@ The official application is closed source and wants to run as `root`. Not someth
 
 A little bit of USB sniffing revealed that the official application sends one packet to ACT05 and switches the device to a bitmask mode, where each key press is represented by one bit in a report.
 
-More can be seen in the [xppen_hid module](src/xppen_hid/mod.rs#l74)
+More can be seen in the [xppen_hid module](src/xppen_hid/mod.rs#L74)
 
 ## Setup
 
@@ -57,7 +57,7 @@ The included keymap is designed to help with painting in Krita.
 
 Once the application is running a multilayer keymap should be active and behave like this.
 
-The keymap can be modified in the [load_layout](src/layout/serialization.rs#l18) function (for now, I plan to eventually separate it from the code.)
+The keymap can be modified in the [load_layout](src/layout/serialization.rs#L18) function (for now, I plan to eventually separate it from the code.)
 
 ```
 ( CCW <- )   [ 0 ][ 1 ][ 2 ][ 6 ]
