@@ -33,6 +33,10 @@ const DEFAULT_LAYER_CONFIG: Layer = Layer{
 fn assert_emitted_keys(layout: &mut LayerSwitcher, keys: Vec<(Key, bool)>) {
     let mut received = Vec::new();
 
+    // Compute all registered keys. This is done every time instead of once,
+    // but it makes the code simpler to write
+    let registered_keys = layout.get_used_keys();
+
     // The test could be done directly in the closure, but the asserts then
     // report a wrong caller line, because track_caller is still unstable
     // for closures.
@@ -45,6 +49,7 @@ fn assert_emitted_keys(layout: &mut LayerSwitcher, keys: Vec<(Key, bool)>) {
         assert!(idx < keys.len(), "Unexpected key {:?}/{}", k, v);
         assert_eq!(keys[idx].0, k, "Expected key {:?}/{} got {:?}/{}", keys[idx].0, keys[idx].1, k, v);
         assert_eq!(keys[idx].1, v, "Expected key {:?} state to be {} got {}", k, keys[idx].1, v);
+        assert!(registered_keys.contains(&k), "Emitted key {:?} is not registered to the OS", k);
         idx += 1;
     }
 
