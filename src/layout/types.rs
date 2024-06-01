@@ -1,8 +1,6 @@
-use std::{collections::{BTreeMap, BTreeSet}, time::{Duration, Instant}};
+use std::time::Instant;
 
 use evdev::Key;
-
-use super::layer::Layer;
 
 pub type LayerId = usize;
 pub type EventCount = u32;

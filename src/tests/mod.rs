@@ -1,6 +1,3 @@
-use std::default;
-use std::time::Instant;
-
 use evdev::Key;
 
 use crate::kbd_events::KeyStateChange;
@@ -157,7 +154,7 @@ fn test_basic_layered_layout() {
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTSHIFT, true)]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
 
     layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
@@ -184,7 +181,7 @@ fn test_basic_layered_layout_cross_release() {
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTSHIFT, true)]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
 
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B04), t);
@@ -246,7 +243,7 @@ fn test_tap_layered_layout() {
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_LEFTSHIFT, false), (Key::KEY_B, false)]);
 
     assert_eq!(layout.get_active_layers(), vec![0]);
@@ -271,7 +268,7 @@ fn test_tap_layered_hold() {
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false) ]);
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
@@ -301,7 +298,7 @@ fn test_tap_layered_hold_crossed() {
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
-    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true) ]);
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
@@ -338,7 +335,7 @@ fn test_tap_layered_hold_dual_crossed() {
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
-    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true) ]);
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
@@ -375,7 +372,7 @@ fn test_tap_layered_hold_dual_crossed_lifo() {
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
-    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true) ]);
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
@@ -444,7 +441,7 @@ fn test_layered_layout_w_masked_key() {
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTSHIFT, true)]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
 
     // This temporarily masks the Shift key
@@ -506,7 +503,7 @@ fn test_layered_layout_w_mask() {
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTSHIFT, true)]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
 
     // This temporarily masks the Shift key
@@ -534,7 +531,7 @@ fn test_layered_layout_w_mask_crossed() {
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTSHIFT, true)]);
 
-    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
 
     // This temporarily masks the Shift key

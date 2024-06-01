@@ -1,9 +1,13 @@
 use enumset::{EnumSet, EnumSetType};
 use hidapi::{self, DeviceInfo, HidApi, HidDevice};
 
-use crate::{kbd_events::HasState};
+use crate::kbd_events::HasState;
 use crate::layout::types::KeyCoords;
 
+const PID: u16 = 0x0202;
+const VID: u16 = 0x28bd;
+
+// XP-Pen ACT05
 pub struct XpPenAct05 {
     device: HidDevice
 }
@@ -40,9 +44,6 @@ impl HasState for XpPenButtons {
 
 
 fn open_keyboard(api: &HidApi) -> Option<&DeviceInfo> {
-    // XP-Pen ACT05
-    let (VID, PID) = (0x28bd, 0x0202);
-
     for device in api.device_list() {
         if device.vendor_id() == VID && device.product_id() == PID && device.interface_number() == 2 {
             println!("SELECTING {:?} {:?} {:?} {:?}", device, device.manufacturer_string(), device.product_string(), device.serial_number());
@@ -81,7 +82,7 @@ impl XpPenAct05 {
     }
 
     pub fn set_blocking(&self) {
-        self.device.set_blocking_mode(true);
+        let _= self.device.set_blocking_mode(true);
     }
 
     pub fn read(&self) -> EnumSet<XpPenButtons> {

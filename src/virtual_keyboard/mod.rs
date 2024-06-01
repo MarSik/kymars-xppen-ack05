@@ -1,6 +1,5 @@
-use std::slice::Iter;
-
-use evdev::{uinput::{VirtualDevice, VirtualDeviceBuilder}, AttributeSet, EventType, InputEvent, Key};
+use evdev::{AttributeSet, EventType, InputEvent, Key};
+use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
 
 pub struct VirtualKeyboard {
     kbd: VirtualDevice
