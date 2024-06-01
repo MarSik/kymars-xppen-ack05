@@ -1,4 +1,5 @@
-use std::time;
+use std::thread::sleep;
+use std::time::{self, Duration};
 
 use xppen_act05::xppen_hid::XpPenAct05;
 use xppen_act05::virtual_keyboard::VirtualKeyboard;
@@ -25,15 +26,20 @@ fn main() {
     loop {
         // Read state data from device
         let buttons = xppen.read();
-        println!("{:?}", buttons);
+        //println!("{:?}", buttons);
 
         // Compute state changes
         xppen_events.analyze(buttons);
 
         // Emit virtual keys
         while let Some(ev) = xppen_events.next() {
+            println!("Input: {:?}", ev);
             layout.process_keyevent(ev, time::Instant::now());
-            layout.render(|k, s| kbd.emit_key(k, s));
+            layout.render(|k, s| {
+                println!("Output > {:?} pressed {}", k, s);
+                kbd.emit_key(k, s);
+                sleep(Duration::from_millis(2));
+            });
         }
     }
 }

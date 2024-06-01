@@ -678,6 +678,7 @@ fn hold_and_tap_key_layered_layout() -> LayerSwitcher {
     let shift_layer = Layer{
         status_on_reset: crate::layout::types::LayerStatus::LayerPassthrough,
         keymap: keymap_shift,
+        on_active_keys: vec![Key::KEY_4],
         ..DEFAULT_LAYER_CONFIG
     };
 
@@ -695,7 +696,7 @@ fn test_hold_and_tap_key_layered_layout() {
     assert_emitted_keys(&mut layout, vec![]);
 
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
-    assert_emitted_keys(&mut layout, vec![]);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_4, true)]);
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
@@ -706,7 +707,7 @@ fn test_hold_and_tap_key_layered_layout() {
 
     // Time was short enough for tap key
     layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(190));
-    assert_emitted_keys(&mut layout, vec![(Key::KEY_0, true), (Key::KEY_0, false)]);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_4, false), (Key::KEY_0, true), (Key::KEY_0, false)]);
 
     assert_eq!(layout.get_active_layers(), vec![0]);
 
@@ -723,7 +724,7 @@ fn test_hold_and_tap_key_layered_layout_long_press() {
     assert_emitted_keys(&mut layout, vec![]);
 
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
-    assert_emitted_keys(&mut layout, vec![]);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_4, true)]);
 
     assert_eq!(layout.get_active_layers(), vec![0, 1]);
 
@@ -734,7 +735,7 @@ fn test_hold_and_tap_key_layered_layout_long_press() {
 
     // Time was too long for a tap key
     layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(220));
-    assert_emitted_keys(&mut layout, vec![]);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_4, false)]);
 
     assert_eq!(layout.get_active_layers(), vec![0]);
 

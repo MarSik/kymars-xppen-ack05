@@ -88,7 +88,7 @@ impl XpPenAct05 {
     pub fn read(&self) -> EnumSet<XpPenButtons> {
         let mut buf = [0u8; 32];
         let res = self.device.read(&mut buf[..]).unwrap();
-        println!("Read: {:?}", &buf[..res]);
+        //println!("Read: {:?}", &buf[..res]);
 
         if buf[1] != 240 {
             return EnumSet::empty();

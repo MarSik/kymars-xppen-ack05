@@ -4,6 +4,7 @@ pub trait HasState {
     fn has_state(self) -> bool;
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum KeyStateChange<T> {
     Pressed(T),
     Released(T),

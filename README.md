@@ -68,16 +68,19 @@ The keymap can be modified in the [load_layout](src/layout/serialization.rs#L18)
 ### (0) Base layer
 
 - *press* **<1>**: presses `Insert` - new paint layer
-- *hold* **[3]**: holds `V` - draw a line
 - *press* **<5>**: presses `B` - select the brush tool
+- *hold* **<5>**: holds `V` - draw a line
 - *press* **<6>**: presses `Ctrl-Z` - undo
 - *hold* **[7]**: holds `Ctrl` and activates `layer 1`
-- *hold* **[8]**: holds `Space` and activates `layer 3`
-- *hold* **[9]**: holds `Shift` and activates `layer 2`
-- *click* **<9>**: sends `Shift-E` - I have that mapped to `toggle eraser mode`
+- *hold* **[8]**: holds `Shift` and activates `layer 3`
+- *click* **<8>**: sends `Shift-E` - I have that mapped to `toggle eraser mode`
+- *hold* **[9]**: holds `Space` and activates `layer 2`
 - **ROT**: zoom viewport
 
-### (1) Color layer
+### (1) Color and painting layer
+
+When this layer is active you can tap with the stylus to
+pick color.
 
 - *click* **<0>**: presses `L` - lighter color
 - *click* **<1>**: presses `Ctrl-E` - merge layer down
@@ -85,19 +88,27 @@ The keymap can be modified in the [load_layout](src/layout/serialization.rs#L18)
 - *click* **<8>**: presses `Ctrl+Space` - mirror view horizontaly
 - **ROT**: brush size
 
-### (2) Shift layer
+### (2) View and move layer
+
+When this layer is active you can drag with the stylus to move
+canvas view.
 
 - *click* **<1>**: presses `4` - rotate viewport CCW
 - *click* **<2>**: presses `6` - rotate viewport CW
 - *click* **<4>**: presses `5` - reset viewport rotation
 - *click* **<6>**: presses `Ctrl-Shift-Z` - redo
+- **ROT**: rotate viewport
 
-### (3) Space layer
+### (3) Tool layer
 
-- *click* **<4>**: presses `5` - reset viewport rotation
+When this layer is active you can drag with the stylus to change
+brush size.
+
+- *click* **<0>**: presses `ESC` - cancel
+- *click* **<2>**: presses `Ctrl-T` - transform tool
+- *click* **<6>**: presses `Enter` - confirm transformation
 - *click* **<7>**: presses `Ctrl+Space` - mirror view horizontaly
 - *hold* **[9]**: holds `Shift+Space` - rotate viewport
-- **ROT**: rotate viewport
 
 
 ## Authors and license

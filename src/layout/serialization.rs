@@ -18,9 +18,9 @@ use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap
 pub fn load_layout(s: &str) -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ No,              K(Key::KEY_INSERT),                                  Kg(vec![Key::KEY_LEFTSHIFT, Key::KEY_E]),
-                  K(Key::KEY_V),   No,                                                  K(Key::KEY_B),                             Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_Z]),
-                  Lhold(1),        LhtKg(3, vec![Key::KEY_LEFTSHIFT, Key::KEY_E]),      Lhold(2),
+            vec![ K(Key::KEY_F12), K(Key::KEY_INSERT),                             Kg(vec![Key::KEY_LEFTSHIFT, Key::KEY_E]),
+                  No,            No,                                             LhtK(4, Key::KEY_B),                       Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_Z]),
+                  Lhold(1),        LhtKg(2, vec![Key::KEY_LEFTSHIFT, Key::KEY_E]),                                            Lhold(3),
 
                   K(Key::KEY_MINUS), K(Key::KEY_SLASH) ] // should be minus and equals
         ],
@@ -36,7 +36,7 @@ pub fn load_layout(s: &str) -> LayerSwitcher {
         ],
     ];
 
-    let keymap_shift = vec![ // blocks
+    let keymap_view = vec![ // blocks
     vec![ // rows
         vec![ No,             K(Key::KEY_4),     K(Key::KEY_6),
               No,   Pass,     K(Key::KEY_5),     Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_LEFTSHIFT, Key::KEY_Z]),
@@ -46,13 +46,23 @@ pub fn load_layout(s: &str) -> LayerSwitcher {
         ],
     ];
 
-    let keymap_space = vec![ // blocks
+    let keymap_tools = vec![ // blocks
     vec![ // rows
-        vec![ No,                                            No,            No,
-              No,                                            K(Key::KEY_5), No, No,
-              Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_SPACE]),   No,                Kg(vec![Key::KEY_LEFTSHIFT, Key::KEY_SPACE]),
+        vec![ K(Key::KEY_ESC),                               Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_E]),   Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_T]),
+              No,                                            K(Key::KEY_5),                             No,        K(Key::KEY_ENTER),
+              Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_SPACE]),   No,                                        Kg(vec![Key::KEY_LEFTSHIFT, Key::KEY_SPACE]),
 
               K(Key::KEY_6), K(Key::KEY_4) ]
+        ],
+    ];
+
+    let keymap_pass = vec![ // blocks
+    vec![ // rows
+        vec![ Pass,   Pass,   Pass,
+              Pass,   Pass,   Pass,  Pass,
+              Pass,   Pass,   Pass,
+
+              Pass, Pass ]
         ],
     ];
 
@@ -75,23 +85,31 @@ pub fn load_layout(s: &str) -> LayerSwitcher {
         ..default_layer.clone()
     };
 
-    let shift_layer = Layer{
+    let tools_layer = Layer{
         status_on_reset: super::types::LayerStatus::LayerPassthrough,
         on_active_keys: vec![Key::KEY_LEFTSHIFT],
         disable_active_on_press: true,
-        keymap: keymap_shift,
+        keymap: keymap_tools,
         ..default_layer.clone()
     };
 
-    let space_layer = Layer{
+    let view_layer = Layer{
         status_on_reset: super::types::LayerStatus::LayerPassthrough,
         on_active_keys: vec![Key::KEY_SPACE],
         disable_active_on_press: true,
-        keymap: keymap_space,
+        keymap: keymap_view,
         ..default_layer.clone()
     };
 
-    let layers = vec![default_layer, color_layer, shift_layer, space_layer];
+    let draw_layer = Layer{
+        status_on_reset: super::types::LayerStatus::LayerPassthrough,
+        on_active_keys: vec![Key::KEY_V],
+        disable_active_on_press: true,
+        keymap: keymap_pass,
+        ..default_layer.clone()
+    };
+
+    let layers = vec![default_layer, color_layer, tools_layer, view_layer, draw_layer];
 
     LayerSwitcher::new(layers)
 }

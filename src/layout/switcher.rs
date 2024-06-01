@@ -506,7 +506,8 @@ impl LayerSwitcher {
     pub fn get_used_keys(&self) -> HashSet<Key> {
         let mut keyset = HashSet::new();
         for l in &self.layers {
-            keyset.extend(l.get_used_keys());
+            keyset.extend(&l.get_used_keys());
+            keyset.extend(&l.on_active_keys);
         }
         return keyset;
     }
