@@ -12,7 +12,7 @@ pub struct XpPenAct05 {
     device: HidDevice
 }
 
-#[derive(EnumSetType, Debug)]
+#[derive(EnumSetType, Debug, Hash)]
 pub enum XpPenButtons {
     XpB01,
     XpB02,

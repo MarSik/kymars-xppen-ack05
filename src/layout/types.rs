@@ -50,6 +50,10 @@ pub enum KeymapEvent {
     /// Press event sends a sequence of key press events.
     /// Release sends the a key release sequence in reverse order
     Kg(Vec<evdev::Key>), // Key group
+    /// If a key is released quickly send first key press/release pair,
+    /// but when it is still pressed after the timeout, press the second key
+    /// and release it on key release.
+    Klong(evdev::Key, evdev::Key),
     /// Key event with mask. First a key release event is sent for each mask key,
     /// then a click (press followed by release) of keys and at the end the mask
     /// is replayed as keypress events in reverse order (the same as Kg)

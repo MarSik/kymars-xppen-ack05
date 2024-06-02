@@ -25,11 +25,17 @@ fn main() {
 
     loop {
         // Read state data from device
+        // NOTE The keyboard sends additional HIT events when the key is kept pressed
+        //      so it is not needed to wake the loop later to check if a long press
+        //      is happening.
         let buttons = xppen.read();
         //println!("{:?}", buttons);
 
         // Compute state changes
-        xppen_events.analyze(buttons);
+        if xppen_events.analyze(buttons, time::Instant::now()) {
+            // NOTE Normally this would have to schedule wakeup call when new keypresses are detected
+            //      to detect long presses. But the keyboard sends extra events and wakes up the loop.
+        }
 
         // Emit virtual keys
         while let Some(ev) = xppen_events.next() {
