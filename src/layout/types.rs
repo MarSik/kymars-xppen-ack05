@@ -54,6 +54,10 @@ pub enum KeymapEvent {
     /// but when it is still pressed after the timeout, press the second key
     /// and release it on key release.
     Klong(evdev::Key, evdev::Key),
+    /// A short press for key, long press for activating a layer
+    Khl(evdev::Key, LayerId),
+    /// A short press for key, long press for activating a tap layer (Ltap)
+    Khtl(evdev::Key, LayerId),
     /// Key event with mask. First a key release event is sent for each mask key,
     /// then a click (press followed by release) of keys and at the end the mask
     /// is replayed as keypress events in reverse order (the same as Kg)

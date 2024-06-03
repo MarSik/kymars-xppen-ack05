@@ -4,7 +4,7 @@ use crate::kbd_events::KeyStateChange;
 use crate::layout::layer::Layer;
 use crate::layout::types::KeyCoords;
 use crate::layout::switcher::LayerSwitcher;
-use crate::layout::types::KeymapEvent::{K, Kms, No, Lhold, Inh, Ltap, Lactivate, Pass, LhtK, LhtKg, LhtL, Klong};
+use crate::layout::types::KeymapEvent::{K, Kms, No, Lhold, Inh, Ltap, Lactivate, Pass, LhtK, LhtKg, LhtL, Klong, Khl, Khtl, Ldeactivate};
 
 use self::testtime::TestTime;
 
@@ -897,3 +897,202 @@ fn test_short_long_press_layout() {
     layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(200));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_1, false)]);
 }
+
+// Dual layout, basic test simulating tap to key, hold to enable layer
+fn short_key_long_layer_layout() -> LayerSwitcher {
+    let keymap_default = vec![ // blocks
+        vec![ // rows
+            vec![ Khl(Key::KEY_0, 1),   K(Key::KEY_B) ],
+            vec![ K(Key::KEY_LEFTSHIFT),                          No,           ],
+        ],
+    ];
+
+    let keymap_shift = vec![ // blocks
+        vec![ // rows
+            vec![ No,             K(Key::KEY_T), ],
+            vec![ Ldeactivate(1), K(Key::KEY_E), ],
+        ],
+    ];
+
+    let default_layer = Layer{
+        keymap: keymap_default,
+        ..DEFAULT_LAYER_CONFIG
+    };
+
+    let shift_layer = Layer{
+        status_on_reset: crate::layout::types::LayerStatus::LayerPassthrough,
+        keymap: keymap_shift,
+        ..DEFAULT_LAYER_CONFIG
+    };
+
+    let layers = vec![default_layer, shift_layer];
+
+    LayerSwitcher::new(layers)
+}
+
+#[test]
+fn test_short_key_long_layer_layout() {
+    let mut layout = short_key_long_layer_layout();
+    layout.start();
+    let mut t = TestTime::start();
+
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    // Time was short enough for tap key
+    layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(190));
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_0, true), (Key::KEY_0, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
+    assert_emitted_keys(&mut layout, vec![]);
+}
+
+#[test]
+fn test_short_key_long_layer_layout_long_press() {
+    let mut layout = short_key_long_layer_layout();
+    layout.start();
+    let mut t = TestTime::start();
+
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    // Time was too long for a tap key
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(220));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0, 1]);
+
+    layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(100));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0, 1]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_E, true), (Key::KEY_E, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0, 1]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B03), t);
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+}
+
+// Dual layout, basic test simulating tap to key, hold to enable tap layer
+fn short_key_long_tap_layer_layout() -> LayerSwitcher {
+    let keymap_default = vec![ // blocks
+        vec![ // rows
+            vec![ Khtl(Key::KEY_0, 1),   K(Key::KEY_B) ],
+            vec![ K(Key::KEY_LEFTSHIFT),                          No,           ],
+        ],
+    ];
+
+    let keymap_shift = vec![ // blocks
+        vec![ // rows
+            vec![ No,                    K(Key::KEY_T), ],
+            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+        ],
+    ];
+
+    let default_layer = Layer{
+        keymap: keymap_default,
+        ..DEFAULT_LAYER_CONFIG
+    };
+
+    let shift_layer = Layer{
+        status_on_reset: crate::layout::types::LayerStatus::LayerPassthrough,
+        keymap: keymap_shift,
+        ..DEFAULT_LAYER_CONFIG
+    };
+
+    let layers = vec![default_layer, shift_layer];
+
+    LayerSwitcher::new(layers)
+}
+
+#[test]
+fn test_short_key_long_tap_layer_layout() {
+    let mut layout = short_key_long_tap_layer_layout();
+    layout.start();
+    let mut t = TestTime::start();
+
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    // Time was short enough for tap key
+    layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(190));
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_0, true), (Key::KEY_0, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
+    assert_emitted_keys(&mut layout, vec![]);
+}
+
+#[test]
+fn test_short_key_long_tap_layer_layout_long_press() {
+    let mut layout = short_key_long_tap_layer_layout();
+    layout.start();
+    let mut t = TestTime::start();
+
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    // Time was too long for a tap key
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(220));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0, 1]);
+
+    layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(100));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    assert_eq!(layout.get_active_layers(), vec![0, 1]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_E, true), (Key::KEY_E, false)]);
+
+    assert_eq!(layout.get_active_layers(), vec![0]);
+
+    layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
+    assert_emitted_keys(&mut layout, vec![]);
+}
+
