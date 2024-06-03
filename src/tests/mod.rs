@@ -4,7 +4,7 @@ use crate::kbd_events::KeyStateChange;
 use crate::layout::layer::Layer;
 use crate::layout::types::KeyCoords;
 use crate::layout::switcher::LayerSwitcher;
-use crate::layout::types::KeymapEvent::{K, Kms, No, Lhold, Inh, Ltap, Lactivate, Pass, LhtK, LhtKg, LhtL};
+use crate::layout::types::KeymapEvent::{K, Kms, No, Lhold, Inh, Ltap, Lactivate, Pass, LhtK, LhtKg, LhtL, Klong};
 
 use self::testtime::TestTime;
 
@@ -89,6 +89,10 @@ fn test_basic_layout() {
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTALT, true)]);
 
+    // Test that long press will not break the key flow
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(500));
+    assert_emitted_keys(&mut layout, vec![]);
+
     layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
 
@@ -158,6 +162,10 @@ fn test_basic_layered_layout() {
 
     layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
     assert_emitted_keys(&mut layout, vec![(Key::KEY_LEFTSHIFT, true)]);
+
+    // Test that long press will not break the layer switch flow
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(500));
+    assert_emitted_keys(&mut layout, vec![]);
 
     layout.process_keyevent(KeyStateChange::Click(TestDevice::B02), t.advance_ms(1));
     assert_emitted_keys(&mut layout, vec![(Key::KEY_B, true), (Key::KEY_B, false)]);
@@ -834,4 +842,58 @@ fn test_hold_and_tap_keygroup_layered_layout_long_press() {
 
     layout.process_keyevent(KeyStateChange::Click(TestDevice::B04), t);
     assert_emitted_keys(&mut layout, vec![]);
+}
+
+// Singlke layout, basic test simulating short and long presses
+fn short_long_press_layout() -> LayerSwitcher {
+    let keymap_default = vec![ // blocks
+        vec![ // rows
+            vec![ Klong(Key::KEY_0, Key::KEY_1),   K(Key::KEY_B) ],
+            vec![ K(Key::KEY_LEFTSHIFT),           No,           ],
+        ],
+    ];
+
+    let default_layer = Layer{
+        keymap: keymap_default,
+        ..DEFAULT_LAYER_CONFIG
+    };
+
+    let layers = vec![default_layer];
+
+    LayerSwitcher::new(layers)
+}
+
+#[test]
+fn test_short_long_press_layout() {
+    let mut layout = short_long_press_layout();
+    layout.start();
+    let mut t = TestTime::start();
+
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t);
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(200));
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_0, true), (Key::KEY_0, false)]);
+
+    layout.process_keyevent(KeyStateChange::Pressed(TestDevice::B01), t.advance_ms(100));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    // Long press is based on time in the state machine, but also
+    // on the state analyzer sending a LongPress event.
+
+    // First long press is not long enough to be detected as long
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(100));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(500));
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_1, true)]);
+
+    // LongPress might arrive multiple times, additional events should do nothing
+    layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(500));
+    assert_emitted_keys(&mut layout, vec![]);
+
+    layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(200));
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_1, false)]);
 }

@@ -15,7 +15,9 @@ pub enum KeyStateChange<T> {
     Released(T),
     /// Key does not support state and was triggered
     Click(T),
-    /// Key is still held down after long press timeout elapsed
+    /// Key is still held down. This must be sent multiple
+    /// times after each long press timeout elapses if
+    /// the key is still in the pressed state.
     LongPress(T),
 }
 
@@ -32,6 +34,9 @@ impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
         }
     }
 
+    /// Analyze keyboard state and detect Press, Release and LongPress events
+    /// Return true when new key is pressed so potentially a long press
+    /// timer can be set up.
     pub fn analyze(&mut self, input: EnumSet<T>, t: Instant) -> bool {
         let mut new_presses_detected = false;
 
@@ -56,11 +61,13 @@ impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
             if self.state.contains_key(&k) && k.has_state() {
                 let (press_t, long_p) = self.state.get(&k).unwrap();
                 // check press timestamp and send LongPress
-                if !long_p && t - *press_t > time::Duration::from_millis(200) {
+                if t - *press_t > time::Duration::from_millis(200) {
                     self.events.push(KeyStateChange::LongPress(k));
 
-                    // Update the record to indicate long press was already sent
-                    self.state.insert(k, (*press_t, true));
+                    if !long_p {
+                        // Update the record to indicate long press was already sent
+                        self.state.insert(k, (*press_t, true));
+                    }
                 }
             }
         }

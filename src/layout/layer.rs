@@ -49,6 +49,11 @@ impl Layer {
                         KeymapEvent::Inh => {},
                         KeymapEvent::Pass => {},
                         KeymapEvent::K(k) => keys.push(*k),
+                        KeymapEvent::Klong(k_s, k_l) => {
+                            keys.push(*k_s);
+                            keys.push(*k_l);
+                        },
+
                         KeymapEvent::Kg(ks) => {
                             keys.extend(ks);
                         },

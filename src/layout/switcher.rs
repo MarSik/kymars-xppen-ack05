@@ -20,7 +20,7 @@ pub struct LayerSwitcher {
     pub(super) layer_stack: Vec<LayerStackEntry>,
     /// Currently pressed keys needing release
     /// with their originating layer and release keycodes
-    pub(super) presses: Vec<(LayerId, KeyCoords, Vec<Key>)>,
+    pub(super) presses: Vec<(LayerId, KeyCoords, Vec<Key>, Instant)>,
 
     /// Queue of generated keycodes to issue to the OS
     emitted_codes: VecDeque<(Key, bool)>,
@@ -226,7 +226,7 @@ impl LayerSwitcher {
 
     /// Get the number of currently recorded presses originating from `layer`
     pub(crate) fn active_keys_from_layer(&self, layer: LayerId) -> usize {
-        self.presses.iter().fold(0, |acc, (a, _, _)| {
+        self.presses.iter().fold(0, |acc, (a, _, _, _)| {
             if (*a) == layer {
                 acc + 1
             } else {
@@ -256,7 +256,7 @@ impl LayerSwitcher {
                 }
 
                 self.emit_keycodes(coords, &k, true);
-                self.presses.push((srclayer, coords, vec![k]));
+                self.presses.push((srclayer, coords, vec![k], t));
             },
             KeymapEvent::Kg(ks) => {
                 if self.layers[srclayer].disable_active_on_press && self.layer_stack[srclayer].active_keys {
@@ -271,7 +271,7 @@ impl LayerSwitcher {
                     self.emit_keycodes(coords, k, true);
                 }
                 // Keep track of pressed keys in case of layer deactivation
-                self.presses.push((srclayer, coords, ks));
+                self.presses.push((srclayer, coords, ks, t));
             },
             KeymapEvent::Ks(ks) => {
                 for k in ks {
@@ -282,7 +282,7 @@ impl LayerSwitcher {
             KeymapEvent::Klong(..) => {
                 // Record the press without a key release entry to make sure
                 // the active layer is preserved
-                self.presses.push((srclayer, coords, vec![]));
+                self.presses.push((srclayer, coords, vec![], t));
             },
             KeymapEvent::Kms(km, kc) => {
                 for k in &km {
@@ -329,23 +329,29 @@ impl LayerSwitcher {
         }
         let press = press.unwrap();
 
-        // Remove the short press entry
-        self.presses.swap_remove(press.0);
+        // Long press was still too short, wait for another one
+        if t - press.3 <= HOLD_THRESHOLD_MS {
+            return
+        }
 
         // In case no release events were recorded consult the keymap and press the long keys
         if press.2.is_empty() {
             if let KeymapEvent::Klong(_, klong) = self.layers[press.1].get_key_event(coords) {
+                // Remove the short press entry
+                self.presses.swap_remove(press.0);
+
+                // Emit and record the long press entry
                 self.emit_keycodes(coords, &klong, true);
-                self.presses.push((press.1, coords, vec![klong]));
+                self.presses.push((press.1, coords, vec![klong], t));
             }
         }
     }
 
     /// Find if there is an associated recorded key release entry for `coords`
-    fn find_press(&self, coords: KeyCoords) -> Option<(usize, LayerId, Vec<Key>)> {
-        for (idx, (layer, coord, keys)) in (&self.presses).into_iter().enumerate() {
+    fn find_press(&self, coords: KeyCoords) -> Option<(usize, LayerId, Vec<Key>, Instant)> {
+        for (idx, (layer, coord, keys, t)) in (&self.presses).into_iter().enumerate() {
             if *coord == coords {
-                return Some((idx, *layer, keys.clone()))
+                return Some((idx, *layer, keys.clone(), *t))
             }
         }
         return None
