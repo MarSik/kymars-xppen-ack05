@@ -48,26 +48,15 @@ impl Layer {
                         KeymapEvent::No => {},
                         KeymapEvent::Inh => {},
                         KeymapEvent::Pass => {},
-                        KeymapEvent::K(k) => keys.push(*k),
+                        KeymapEvent::Kg(k) => keys.extend(k.get_used_keys()),
                         KeymapEvent::Klong(k_s, k_l) => {
-                            keys.push(*k_s);
-                            keys.push(*k_l);
+                            keys.extend(k_s.get_used_keys());
+                            keys.extend(k_l.get_used_keys());
                         },
-                        KeymapEvent::Khtl(k, _) => keys.push(*k),
-                        KeymapEvent::Khl(k, _) => keys.push(*k),
+                        KeymapEvent::Khtl(k, _) => keys.extend(k.get_used_keys()),
+                        KeymapEvent::Khl(k, _) => keys.extend(k.get_used_keys()),
 
-                        KeymapEvent::Kg(ks) => {
-                            keys.extend(ks);
-                        },
-                        KeymapEvent::Ks(ks) => keys.extend(ks),
-                        KeymapEvent::Kms(km, kc) => {
-                            keys.extend(km);
-                            keys.extend(kc);
-                        },
-                        KeymapEvent::LhtK(_, k) => keys.push(*k),
-                        KeymapEvent::LhtKg(_, ks) => {
-                            keys.extend(ks);
-                        },
+                        KeymapEvent::LhtK(_, k) => keys.extend(k.get_used_keys()),
                         _ => {}
                     }
                 }

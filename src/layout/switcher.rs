@@ -5,6 +5,7 @@ use evdev::Key;
 
 use crate::kbd_events::KeyStateChange;
 
+use super::keys::KeyGroup;
 use super::layer::Layer;
 use super::types::{KeyCoords, KeymapEvent, LayerId, LayerStatus};
 
@@ -13,6 +14,12 @@ const LAYER_KEY: KeyCoords = KeyCoords(255, 255, 255);
 /// The key press duration threshold to distinguish between tap and hold
 const HOLD_THRESHOLD_MS: Duration = Duration::from_millis(200);
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum KeyReleaseMode {
+    Reverse,
+    ForceClick
+}
+
 pub struct LayerSwitcher {
     /// Static configuration of layers
     pub(super) layers: Vec<Layer>,
@@ -20,7 +27,7 @@ pub struct LayerSwitcher {
     pub(super) layer_stack: Vec<LayerStackEntry>,
     /// Currently pressed keys needing release
     /// with their originating layer and release keycodes
-    pub(super) presses: Vec<(LayerId, KeyCoords, Vec<Key>, Instant)>,
+    pub(super) presses: Vec<(LayerId, KeyCoords, KeyReleaseMode, Option<KeyGroup>, Instant)>,
 
     /// Queue of generated keycodes to issue to the OS
     emitted_codes: VecDeque<(Key, bool)>,
@@ -256,9 +263,55 @@ impl LayerSwitcher {
         self.layer_stack[layer].active_keys = true;
     }
 
+    fn keygroup_press(&mut self, kg: &KeyGroup, coords: KeyCoords, srclayer: LayerId, t: Instant, force_click: bool) {
+        self.before_key_press(srclayer);
+        for k in &kg.mask {
+            self.emit_keycodes(coords, &k, false);
+        }
+
+        for k in &kg.keys {
+            self.emit_keycodes(coords, &k, true);
+            if kg.sequential {
+                self.emit_keycodes(coords, &k, false);
+            }
+        }
+
+        if !kg.sequential && force_click {
+            for k in (&kg.keys).into_iter().rev() {
+                self.emit_keycodes(coords, k, false);
+            }
+        }
+
+        if kg.sequential || force_click {
+            for k in (&kg.mask).into_iter().rev() {
+                self.emit_keycodes(coords, k, true);
+            }
+
+            self.after_key_release(srclayer);
+        } else {
+            self.presses.push((srclayer, coords, KeyReleaseMode::Reverse, Some(kg.clone()), t));
+        }
+    }
+
+    fn keygroup_release(&mut self, kg: &KeyGroup, coords: KeyCoords, srclayer: LayerId) {
+        if kg.sequential {
+            return; // sequential mode should have been released
+        }
+
+        for k in (&kg.keys).into_iter().rev() {
+            self.emit_keycodes(coords, &k, false);
+        }
+
+        for k in (&kg.mask).into_iter().rev() {
+            self.emit_keycodes(coords, k, true);
+        }
+
+        self.after_key_release(srclayer);
+    }
+
     /// Get the number of currently recorded presses originating from `layer`
     pub(crate) fn active_keys_from_layer(&self, layer: LayerId) -> usize {
-        self.presses.iter().fold(0, |acc, (a, _, _, _)| {
+        self.presses.iter().fold(0, |acc, (a, _, _, _, _)| {
             if (*a) == layer {
                 acc + 1
             } else {
@@ -279,53 +332,21 @@ impl LayerSwitcher {
             KeymapEvent::Inh => {},
             KeymapEvent::Pass => {},
 
-            KeymapEvent::K(k) => {
-                self.before_key_press(srclayer);
-                self.emit_keycodes(coords, &k, true);
-                self.presses.push((srclayer, coords, vec![k], t));
+            KeymapEvent::Kg(kg) => {
+                self.keygroup_press(&kg, coords, srclayer, t, false);
             },
-            KeymapEvent::Kg(ks) => {
-                self.before_key_press(srclayer);
-                // Press group
-                for k in &ks {
-                    self.emit_keycodes(coords, k, true);
-                }
-                // Keep track of pressed keys in case of layer deactivation
-                self.presses.push((srclayer, coords, ks, t));
-            },
-            KeymapEvent::Ks(ks) => {
-                self.before_key_press(srclayer);
-                for k in ks {
-                    self.emit_keycodes(coords, &k, true);
-                    self.emit_keycodes(coords, &k, false);
-                }
-                self.after_key_release(srclayer);
-            },
-            KeymapEvent::Klong(..) => {
-                // Record the press without a key release entry to make sure
-                // the active layer is preserved
-                self.presses.push((srclayer, coords, vec![], t));
-            },
-            KeymapEvent::Kms(km, kc) => {
-                self.before_key_press(srclayer);
-                for k in &km {
-                    self.emit_keycodes(coords, &k, false);
-                }
-                for k in kc {
-                    self.emit_keycodes(coords, &k, true);
-                    self.emit_keycodes(coords, &k, false);
-                }
-                for k in &km {
-                    self.emit_keycodes(coords, &k, true);
-                }
-                self.after_key_release(srclayer);
+            KeymapEvent::Klong(kshort, _) => {
+                // Record the press with a short key release entry
+                self.presses.push((srclayer, coords, KeyReleaseMode::ForceClick, Some(kshort), t));
             },
 
             KeymapEvent::Khl(k, _) => {
-                self.presses.push((srclayer, coords, vec![], t));
+                // Record the press with a short key release entry
+                self.presses.push((srclayer, coords, KeyReleaseMode::ForceClick, Some(k), t));
             },
             KeymapEvent::Khtl(k, _) => {
-                self.presses.push((srclayer, coords, vec![], t));
+                // Record the press with a short key release entry
+                self.presses.push((srclayer, coords, KeyReleaseMode::ForceClick, Some(k), t));
             },
 
             KeymapEvent::Lmove(idx) => self.layer_move(idx),
@@ -342,7 +363,6 @@ impl LayerSwitcher {
             },
             KeymapEvent::LhtL(idx, idx2) => self.layer_hold_tap(idx, idx2, coords, t),
             KeymapEvent::LhtK(idx, _) => self.layer_hold_key(idx, coords, t, srclayer),
-            KeymapEvent::LhtKg(idx, _) => self.layer_hold_key(idx, coords, t, srclayer),
         }
 
         // Push forward Tap layers - a tap layer remains active only until next keypress
@@ -362,42 +382,45 @@ impl LayerSwitcher {
         let press = press.unwrap();
 
         // Long press was still too short, wait for another one
-        if t - press.3 <= HOLD_THRESHOLD_MS {
+        if t - press.4 <= HOLD_THRESHOLD_MS {
             return
         }
 
         // In case no release events were recorded consult the keymap and press the long keys
-        if press.2.is_empty() {
-            match self.layers[press.1].get_key_event(coords) {
-                KeymapEvent::Klong(_, klong) => {
+        match self.layers[press.1].get_key_event(coords) {
+            KeymapEvent::Klong(_, klong) => {
+                // When LongPress arrives for the first time, the short click is configured.
+                // Replace it with the Long press.
+                // When LongPress arrives for the second time, the long press is configured
+                // without force_click, use that as a hint that no change is needed.
+                if press.2 == KeyReleaseMode::ForceClick {
                     // Remove the short press entry
                     self.presses.swap_remove(press.0);
 
                     // Emit and record the long press entry
-                    self.emit_keycodes(coords, &klong, true);
-                    self.presses.push((press.1, coords, vec![klong], t));
-                },
-                KeymapEvent::Khtl(_, l) => {
-                    // Remove the short press entry
-                    self.presses.swap_remove(press.0);
-                    self.layer_tap(l, coords);
-                    self.layer_stack[l].status = LayerStatus::LayerActiveUntilAnyKeyPress;
-                },
-                KeymapEvent::Khl(_, l) => {
-                    // Remove the short press entry
-                    self.presses.swap_remove(press.0);
-                    self.layer_activate(l);
-                },
-                _ => {}
-            }
+                    self.keygroup_press(&klong, coords, press.1, t, false);
+                }
+            },
+            KeymapEvent::Khtl(_, l) => {
+                // Remove the short press entry
+                self.presses.swap_remove(press.0);
+                self.layer_tap(l, coords);
+                self.layer_stack[l].status = LayerStatus::LayerActiveUntilAnyKeyPress;
+            },
+            KeymapEvent::Khl(_, l) => {
+                // Remove the short press entry
+                self.presses.swap_remove(press.0);
+                self.layer_activate(l);
+            },
+            _ => {}
         }
     }
 
     /// Find if there is an associated recorded key release entry for `coords`
-    fn find_press(&self, coords: KeyCoords) -> Option<(usize, LayerId, Vec<Key>, Instant)> {
-        for (idx, (layer, coord, keys, t)) in (&self.presses).into_iter().enumerate() {
+    fn find_press(&self, coords: KeyCoords) -> Option<(usize, LayerId, KeyReleaseMode, Option<KeyGroup>, Instant)> {
+        for (idx, (layer, coord, release_mode, kgroup, t)) in (&self.presses).into_iter().enumerate() {
             if *coord == coords {
-                return Some((idx, *layer, keys.clone(), *t))
+                return Some((idx, *layer, *release_mode, kgroup.clone(), *t))
             }
         }
         return None
@@ -427,16 +450,7 @@ impl LayerSwitcher {
                             let kev = self.layers[lidx].get_key_event(wait_coords);
                             match kev {
                                 KeymapEvent::LhtK(_, k) => {
-                                    self.emit_keycodes(LAYER_KEY, &k, true);
-                                    self.emit_keycodes(LAYER_KEY, &k, false);
-                                },
-                                KeymapEvent::LhtKg(_, ks) => {
-                                    for k in &ks {
-                                        self.emit_keycodes(LAYER_KEY, &k, true);
-                                    }
-                                    for k in ks.into_iter().rev() {
-                                        self.emit_keycodes(LAYER_KEY, &k, false);
-                                    }
+                                    self.keygroup_press(&k, coords, lidx, t, true);
                                 },
                                 _ => {}
                             }
@@ -466,29 +480,58 @@ impl LayerSwitcher {
         }
         let press = press.unwrap();
 
-        // Release key if recorded as pressed (in reverse order)
-        for k in (&press.2).into_iter().rev() {
-            self.emit_keycodes(coords, &k, false);
-        }
+        // Release key if recorded as pressed
         self.presses.swap_remove(press.0);
 
-        // In case no release events were recorded consult the keymap and send the short keys
-        if press.2.is_empty() {
-            let k = match self.layers[press.1].get_key_event(coords) {
-                KeymapEvent::Klong(kshort, _) => Some(kshort),
-                KeymapEvent::Khl(kshort, _) => Some(kshort),
-                KeymapEvent::Khtl(kshort, _) => Some(kshort),
-                _ => None
-            };
-
-            if let Some(kshort) = k {
-                self.emit_keycodes(coords, &kshort, true);
-                self.emit_keycodes(coords, &kshort, false);
+        if let Some(kg) = press.3 {
+            if press.2 == KeyReleaseMode::ForceClick {
+                // consult the keymap and send the short keys as full click
+                self.keygroup_press(&kg, coords, press.1, t, true);
+            } else {
+                self.keygroup_release(&kg, coords, press.1);
             }
         }
 
         // Reactivate on_active key when needed
         self.after_key_release(press.1);
+    }
+
+    fn get_key_event_inheritance(&self, coords: KeyCoords, idx: LayerId) -> (LayerId, KeymapEvent) {
+        let mut layer_idx = idx;
+        loop {
+            let ev = (&self.layers)[layer_idx].get_key_event(coords);
+            match ev {
+                KeymapEvent::No => return (idx, ev),
+
+                KeymapEvent::Kg(_) => return (idx, ev),
+                KeymapEvent::Klong(..) => return (idx, ev),
+
+                KeymapEvent::Khl(..) => return (idx, ev),
+                KeymapEvent::Khtl(..) => return (idx, ev),
+
+                KeymapEvent::Lmove(_) => return (idx, ev),
+                KeymapEvent::Lhold(_) => return (idx, ev),
+                KeymapEvent::Ltap(_) => return (idx, ev),
+                KeymapEvent::Lactivate(_) => return (idx, ev),
+                KeymapEvent::Ldeactivate(_) => return (idx, ev),
+                KeymapEvent::Ldisable(_) => return (idx, ev),
+                KeymapEvent::LhtL(..) => return (idx, ev),
+                KeymapEvent::LhtK(..) => return (idx, ev),
+
+                KeymapEvent::Inh => {
+                    // find the layer this inherits from
+                    if let Some(next_p_idx) = (&self.layers)[layer_idx].inherit {
+                        // TODO check that the parent layer ID is valid
+                        layer_idx = next_p_idx;
+                    } else {
+                        break; // no parent
+                    }
+                },
+                KeymapEvent::Pass => break,
+            }
+        }
+
+        return (0, (&self.layers)[layer_idx].default_action.clone())
     }
 
     /// Resolve the keymap event currently mapped to key `coords`. Take into
@@ -501,43 +544,9 @@ impl LayerSwitcher {
                 continue;
             }
 
-            let mut layer_idx = idx;
-            loop {
-                let ev = (&self.layers)[layer_idx].get_key_event(coords);
-                match ev {
-                    KeymapEvent::No => return (idx, ev),
-
-                    KeymapEvent::K(_) => return (idx, ev),
-                    KeymapEvent::Kg(..) => return (idx, ev),
-                    KeymapEvent::Ks(_) => return (idx, ev),
-                    KeymapEvent::Klong(..) => return (idx, ev),
-
-                    KeymapEvent::Khl(..) => return (idx, ev),
-                    KeymapEvent::Khtl(..) => return (idx, ev),
-
-                    KeymapEvent::Kms(..) => return (idx, ev),
-
-                    KeymapEvent::Lmove(_) => return (idx, ev),
-                    KeymapEvent::Lhold(_) => return (idx, ev),
-                    KeymapEvent::Ltap(_) => return (idx, ev),
-                    KeymapEvent::Lactivate(_) => return (idx, ev),
-                    KeymapEvent::Ldeactivate(_) => return (idx, ev),
-                    KeymapEvent::Ldisable(_) => return (idx, ev),
-                    KeymapEvent::LhtL(..) => return (idx, ev),
-                    KeymapEvent::LhtK(..) => return (idx, ev),
-                    KeymapEvent::LhtKg(..) => return (idx, ev),
-
-                    KeymapEvent::Inh => {
-                        // find the layer this inherits from
-                        if let Some(next_p_idx) = (&self.layers)[layer_idx].inherit {
-                            // TODO check that the parent layer ID is valid
-                            layer_idx = next_p_idx;
-                        } else {
-                            break // no parent
-                        }
-                    },
-                    KeymapEvent::Pass => continue 'layer,
-                }
+            let (layerid, ev) = self.get_key_event_inheritance(coords, idx);
+            if ev != KeymapEvent::Pass {
+                return (idx, ev);
             }
         }
 
