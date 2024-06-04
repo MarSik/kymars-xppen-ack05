@@ -402,7 +402,7 @@ impl <'a> LayerSwitcher<'a> {
                     self.presses.swap_remove(press.0);
 
                     // Emit and record the long press entry
-                    self.keygroup_press(&klong, coords, press.1, t, false);
+                    self.keygroup_press(&klong, coords, press.1, t, true);
                 }
             },
             KeymapEvent::Khtl(_, l) => {

@@ -5,7 +5,7 @@ use evdev::Key;
 
 use super::layer::Layer;
 use super::switcher::LayerSwitcher;
-use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap, Kg, Pass, LhtK};
+use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap, Kg, Pass, LhtK, Klong};
 use super::keys::{G, S};
 
 /*
@@ -19,9 +19,9 @@ use super::keys::{G, S};
 pub fn load_layout(s: &str) -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ G().k(Key::KEY_F12).p(), G().k(Key::KEY_INSERT).p(),                             G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E).p(),
-                  No,            No,                                             LhtK(4, G().k(Key::KEY_B)),                       G().k(Key::KEY_LEFTCTRL).k(Key::KEY_Z).p(),
-                  Lhold(1),        LhtK(2, G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E)),                                            Lhold(3),
+            vec![ G().k(Key::KEY_F12).p(), Klong(G().k(Key::KEY_INSERT), G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E)),  G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E).p(),
+                  No,                      No,                                                                     LhtK(4, G().k(Key::KEY_B)),                       G().k(Key::KEY_LEFTCTRL).k(Key::KEY_Z).p(),
+                  Lhold(1),                LhtK(2, G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E)),                                                                         Lhold(3),
 
                   G().k(Key::KEY_MINUS).p(), G().k(Key::KEY_SLASH).p() ] // should be minus and equals
         ],

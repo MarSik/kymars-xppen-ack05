@@ -907,14 +907,14 @@ fn test_short_long_press_layout() {
     assert_emitted_keys(&mut layout, vec![]);
 
     layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(500));
-    assert_emitted_keys(&mut layout, vec![(Key::KEY_1, true)]);
+    assert_emitted_keys(&mut layout, vec![(Key::KEY_1, true), (Key::KEY_1, false)]);
 
     // LongPress might arrive multiple times, additional events should do nothing
     layout.process_keyevent(KeyStateChange::LongPress(TestDevice::B01), t.advance_ms(500));
     assert_emitted_keys(&mut layout, vec![]);
 
     layout.process_keyevent(KeyStateChange::Released(TestDevice::B01), t.advance_ms(200));
-    assert_emitted_keys(&mut layout, vec![(Key::KEY_1, false)]);
+    assert_emitted_keys(&mut layout, vec![]);
 }
 
 // Dual layout, basic test simulating tap to key, hold to enable layer
