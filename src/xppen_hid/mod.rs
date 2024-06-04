@@ -54,6 +54,11 @@ fn open_keyboard(api: &HidApi) -> Option<&DeviceInfo> {
     None
 }
 
+pub enum XpPenResult {
+    Timeout,
+    TryAgain,
+    Keys(EnumSet<XpPenButtons>)
+}
 
 impl XpPenAct05 {
     pub fn new() -> Self {
@@ -85,13 +90,23 @@ impl XpPenAct05 {
         let _= self.device.set_blocking_mode(true);
     }
 
-    pub fn read(&self) -> EnumSet<XpPenButtons> {
+    pub fn read(&self, block: bool) -> XpPenResult {
         let mut buf = [0u8; 32];
-        let res = self.device.read(&mut buf[..]).unwrap();
+
+        let timeout = if block {
+            -1
+        } else {
+            100
+        };
+
+        let res = self.device.read_timeout(&mut buf[..], timeout).unwrap();
         //println!("Read: {:?}", &buf[..res]);
+        if res == 0 {
+            return XpPenResult::Timeout;
+        }
 
         if buf[1] != 240 {
-            return EnumSet::empty();
+            return XpPenResult::TryAgain;
         }
 
         let mut state = EnumSet::empty();
@@ -133,6 +148,6 @@ impl XpPenAct05 {
             state |= XpPenButtons::XpRoCCW;
         }
 
-        return state;
+        return XpPenResult::Keys(state);
     }
 }

@@ -2,7 +2,7 @@ use std::thread::sleep;
 use std::time::{self, Duration};
 
 use xppen_act05::layout::switcher::LayerSwitcher;
-use xppen_act05::xppen_hid::XpPenAct05;
+use xppen_act05::xppen_hid::{XpPenAct05, XpPenResult};
 use xppen_act05::virtual_keyboard::VirtualKeyboard;
 use xppen_act05::kbd_events::ChangeDetector;
 use xppen_act05::layout::serialization::load_layout;
@@ -27,16 +27,16 @@ fn main() {
 
     loop {
         // Read state data from device
-        // NOTE The keyboard sends additional HIT events when the key is kept pressed
-        //      so it is not needed to wake the loop later to check if a long press
-        //      is happening.
-        let buttons = xppen.read();
+        // When any button is pressed use read timeout so the long press can be
+        // analyzed in between messages.
+        let result = xppen.read(!xppen_events.has_pressed());
         //println!("{:?}", buttons);
 
-        // Compute state changes
-        if xppen_events.analyze(buttons, time::Instant::now()) {
-            // NOTE Normally this would have to schedule wakeup call when new keypresses are detected
-            //      to detect long presses. But the keyboard sends extra events and wakes up the loop.
+        if let XpPenResult::Keys(buttons) = result {
+            // Compute state changes
+            xppen_events.analyze(buttons, time::Instant::now());
+        } else {
+            xppen_events.tick(time::Instant::now());
         }
 
         // Emit virtual keys

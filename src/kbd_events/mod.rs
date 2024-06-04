@@ -34,6 +34,23 @@ impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
         }
     }
 
+    /// Time tick, checks for long presses
+    pub fn tick(&mut self, t: Instant) {
+        let keys = Vec::from_iter(self.state.keys().map(|k| *k));
+        for k in keys {
+            let (press_t, long_p) = self.state.get(&k).unwrap();
+            // check press timestamp and send LongPress
+            if t - *press_t > time::Duration::from_millis(200) {
+                self.events.push(KeyStateChange::LongPress(k));
+
+                if !long_p {
+                    // Update the record to indicate long press was already sent
+                    self.state.insert(k, (*press_t, true));
+                }
+            }
+        }
+    }
+
     /// Analyze keyboard state and detect Press, Release and LongPress events
     /// Return true when new key is pressed so potentially a long press
     /// timer can be set up.
@@ -88,5 +105,9 @@ impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
 
     pub fn next(&mut self) -> Option<KeyStateChange<T>> {
         self.events.pop()
+    }
+
+    pub fn has_pressed(&self) -> bool {
+        !self.state.is_empty()
     }
 }
