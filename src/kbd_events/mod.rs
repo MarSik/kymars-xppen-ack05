@@ -22,7 +22,9 @@ pub enum KeyStateChange<T> {
 }
 
 pub struct ChangeDetector<T> where T: EnumSetType+Hash {
+    /// T -> time of press, short(F)/long(T)
     state: HashMap<T, (Instant, bool)>,
+    /// Computed events that were not yet consumed
     events: Vec<KeyStateChange<T>>,
 }
 
