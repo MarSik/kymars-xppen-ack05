@@ -4,7 +4,8 @@ use crate::kbd_events::KeyStateChange;
 use crate::layout::layer::Layer;
 use crate::layout::types::KeyCoords;
 use crate::layout::switcher::LayerSwitcher;
-use crate::layout::types::KeymapEvent::{K, Kms, No, Lhold, Inh, Ltap, Lactivate, Pass, LhtK, LhtKg, LhtL, Klong, Khl, Khtl, Ldeactivate};
+use crate::layout::types::KeymapEvent::{Kg, No, Lhold, Inh, Ltap, Lactivate, Pass, LhtK, LhtL, Klong, Khl, Khtl, Ldeactivate};
+use crate::layout::keys::{G, S};
 
 use self::testtime::TestTime;
 
@@ -60,8 +61,8 @@ fn assert_emitted_keys(layout: &mut LayerSwitcher, keys: Vec<(Key, bool)>) {
 fn basic_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_LEFTALT),   K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ G().k(Key::KEY_LEFTALT).p(),   G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
@@ -108,22 +109,22 @@ fn test_basic_layout() {
 fn basic_layered_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Lhold(1),              K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ Lhold(1),              G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_0), Pass,          ],
-            vec![ Inh          , K(Key::KEY_E), ],
+            vec![ G().k(Key::KEY_0).p(), Pass,          ],
+            vec![ Inh          , G().k(Key::KEY_E).p(), ],
         ],
     ];
 
     let keymap_inh = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_1), K(Key::KEY_9), ],
-            vec![ K(Key::KEY_2), K(Key::KEY_3), ],
+            vec![ G().k(Key::KEY_1).p(), G().k(Key::KEY_9).p(), ],
+            vec![ G().k(Key::KEY_2).p(), G().k(Key::KEY_3).p(), ],
         ],
     ];
 
@@ -214,15 +215,15 @@ fn test_basic_layered_layout_cross_release() {
 fn tap_layered_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Ltap(1),               K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ Ltap(1),               G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
             vec![ No,                    Inh,           ],
-            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), G().k(Key::KEY_E).p(), ],
         ],
     ];
 
@@ -414,15 +415,15 @@ fn test_tap_layered_hold_dual_crossed_lifo() {
 fn layered_layout_with_masked_key() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Lhold(1),              K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ Lhold(1),              G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_0),         Inh,           ],
-            vec![ K(Key::KEY_LEFTSHIFT), Kms(vec![Key::KEY_LEFTSHIFT], vec![Key::KEY_E]), ],
+            vec![ G().k(Key::KEY_0).p(),         Inh,           ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), S().m(Key::KEY_LEFTSHIFT).k(Key::KEY_E).p(), ],
         ],
     ];
 
@@ -474,15 +475,15 @@ fn test_layered_layout_w_masked_key() {
 fn layered_layout_with_mask() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Lhold(1),              K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ Lhold(1),              G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_0),         Inh,           ],
-            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+            vec![ G().k(Key::KEY_0).p(),         Inh,           ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), G().k(Key::KEY_E).p(), ],
         ],
     ];
 
@@ -565,22 +566,22 @@ fn test_layered_layout_w_mask_crossed() {
 fn hold_and_tap_layered_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ LhtL(1, 2),            K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ LhtL(1, 2),            G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ No,                    K(Key::KEY_T),           ],
-            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+            vec![ No,                    G().k(Key::KEY_T).p(),           ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), G().k(Key::KEY_E).p(), ],
         ],
     ];
 
     let keymap_tap = vec![ // blocks
         vec![ // rows
-            vec![ No,            K(Key::KEY_3), ],
-            vec![ K(Key::KEY_1), K(Key::KEY_2), ],
+            vec![ No,            G().k(Key::KEY_3).p(), ],
+            vec![ G().k(Key::KEY_1).p(), G().k(Key::KEY_2).p(), ],
         ],
     ];
 
@@ -671,15 +672,15 @@ fn test_hold_and_tap_layered_layout_long_press() {
 fn hold_and_tap_key_layered_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ LhtK(1, Key::KEY_0),   K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT), No,           ],
+            vec![ LhtK(1, G().k(Key::KEY_0)),   G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ No,                    K(Key::KEY_T), ],
-            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+            vec![ No,                    G().k(Key::KEY_T).p(), ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), G().k(Key::KEY_E).p(), ],
         ],
     ];
 
@@ -760,15 +761,15 @@ fn test_hold_and_tap_key_layered_layout_long_press() {
 fn hold_and_tap_keygroup_layered_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ LhtKg(1, vec![Key::KEY_LEFTALT, Key::KEY_0]),   K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT),                          No,           ],
+            vec![ LhtK(1, G().k(Key::KEY_LEFTALT).k(Key::KEY_0)),   G().k(Key::KEY_B).p(), ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(),                          No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ No,                    K(Key::KEY_T), ],
-            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+            vec![ No,                    G().k(Key::KEY_T).p(), ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), G().k(Key::KEY_E).p(), ],
         ],
     ];
 
@@ -848,8 +849,8 @@ fn test_hold_and_tap_keygroup_layered_layout_long_press() {
 fn short_long_press_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Klong(Key::KEY_0, Key::KEY_1),   K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT),           No,           ],
+            vec![ Klong(G().k(Key::KEY_0), G().k(Key::KEY_1)),   G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(),           No,           ],
         ],
     ];
 
@@ -902,15 +903,15 @@ fn test_short_long_press_layout() {
 fn short_key_long_layer_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Khl(Key::KEY_0, 1),   K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT),                          No,           ],
+            vec![ Khl(G().k(Key::KEY_0), 1),   G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(),                          No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ No,             K(Key::KEY_T), ],
-            vec![ Ldeactivate(1), K(Key::KEY_E), ],
+            vec![ No,             G().k(Key::KEY_T).p(), ],
+            vec![ Ldeactivate(1), G().k(Key::KEY_E).p(), ],
         ],
     ];
 
@@ -1002,15 +1003,15 @@ fn test_short_key_long_layer_layout_long_press() {
 fn short_key_long_tap_layer_layout() -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ Khtl(Key::KEY_0, 1),   K(Key::KEY_B) ],
-            vec![ K(Key::KEY_LEFTSHIFT),                          No,           ],
+            vec![ Khtl(G().k(Key::KEY_0), 1),   G().k(Key::KEY_B).p() ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(),                          No,           ],
         ],
     ];
 
     let keymap_shift = vec![ // blocks
         vec![ // rows
-            vec![ No,                    K(Key::KEY_T), ],
-            vec![ K(Key::KEY_LEFTSHIFT), K(Key::KEY_E), ],
+            vec![ No,                    G().k(Key::KEY_T).p(), ],
+            vec![ G().k(Key::KEY_LEFTSHIFT).p(), G().k(Key::KEY_E).p(), ],
         ],
     ];
 

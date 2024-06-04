@@ -5,7 +5,8 @@ use evdev::Key;
 
 use super::layer::Layer;
 use super::switcher::LayerSwitcher;
-use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap, K, Ks, Kms, Pass, Kg, LhtK, LhtKg};
+use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap, Kg, Pass, LhtK};
+use super::keys::{G, S};
 
 /*
 
@@ -18,28 +19,28 @@ use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap
 pub fn load_layout(s: &str) -> LayerSwitcher {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_F12), K(Key::KEY_INSERT),                             Kg(vec![Key::KEY_LEFTSHIFT, Key::KEY_E]),
-                  No,            No,                                             LhtK(4, Key::KEY_B),                       Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_Z]),
-                  Lhold(1),        LhtKg(2, vec![Key::KEY_LEFTSHIFT, Key::KEY_E]),                                            Lhold(3),
+            vec![ G().k(Key::KEY_F12).p(), G().k(Key::KEY_INSERT).p(),                             G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E).p(),
+                  No,            No,                                             LhtK(4, G().k(Key::KEY_B)),                       G().k(Key::KEY_LEFTCTRL).k(Key::KEY_Z).p(),
+                  Lhold(1),        LhtK(2, G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E)),                                            Lhold(3),
 
-                  K(Key::KEY_MINUS), K(Key::KEY_SLASH) ] // should be minus and equals
+                  G().k(Key::KEY_MINUS).p(), G().k(Key::KEY_SLASH).p() ] // should be minus and equals
         ],
     ];
 
     let keymap_color = vec![ // blocks
         vec![ // rows
-            vec![ K(Key::KEY_L),         Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_E]),      Pass,
-                  K(Key::KEY_K),         No,                                           No,              K(Key::KEY_SLASH),
-                  No,                    Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_SPACE]),  No,
+            vec![ G().k(Key::KEY_L).p(),         G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),      Pass,
+                  G().k(Key::KEY_K).p(),         No,                                           No,              G().k(Key::KEY_SLASH).p(),
+                  No,                    G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),  No,
 
-                  K(Key::KEY_RIGHTBRACE),   K(Key::KEY_LEFTBRACE) ]
+                  G().k(Key::KEY_RIGHTBRACE).p(),   G().k(Key::KEY_LEFTBRACE).p() ]
         ],
     ];
 
     let keymap_view = vec![ // blocks
     vec![ // rows
-        vec![ No,             K(Key::KEY_4),     K(Key::KEY_6),
-              No,   Pass,     K(Key::KEY_5),     Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_LEFTSHIFT, Key::KEY_Z]),
+        vec![ No,             G().k(Key::KEY_4).p(),     G().k(Key::KEY_6).p(),
+              No,   Pass,     G().k(Key::KEY_5).p(),     G().k(Key::KEY_LEFTCTRL).k(Key::KEY_LEFTSHIFT).k(Key::KEY_Z).p(),
               No,             Pass,     No,
 
               Pass, Pass   ]
@@ -48,11 +49,11 @@ pub fn load_layout(s: &str) -> LayerSwitcher {
 
     let keymap_tools = vec![ // blocks
     vec![ // rows
-        vec![ K(Key::KEY_ESC),                               Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_E]),   Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_T]),
-              No,                                            K(Key::KEY_5),                             No,        K(Key::KEY_ENTER),
-              Kg(vec![Key::KEY_LEFTCTRL, Key::KEY_SPACE]),   No,                                        Kg(vec![Key::KEY_LEFTSHIFT, Key::KEY_SPACE]),
+        vec![ G().k(Key::KEY_ESC).p(),                               G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),   G().k(Key::KEY_LEFTCTRL).k(Key::KEY_T).p(),
+              No,                                            G().k(Key::KEY_5).p(),                             No,        G().k(Key::KEY_ENTER).p(),
+              G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),   No,                                        G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_SPACE).p(),
 
-              K(Key::KEY_6), K(Key::KEY_4) ]
+              G().k(Key::KEY_6).p(), G().k(Key::KEY_4).p() ]
         ],
     ];
 

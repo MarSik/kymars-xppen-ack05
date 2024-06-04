@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use evdev::Key;
+use super::keys::KeyGroup;
 
 pub type LayerId = usize;
 pub type EventCount = u32;
@@ -34,7 +34,7 @@ pub struct KeyCoords(pub u8, pub u8, pub u8); // Block, row, column
 
 pub type Keymap = Vec<Vec<Vec<KeymapEvent>>>; // [Block, Row, Col] - > default KeyEvent(None)
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum KeymapEvent {
     /// No effect, no inheritance
     No,
@@ -43,25 +43,16 @@ pub enum KeymapEvent {
     /// No effect, check other active layers next
     Pass,
     /// Map key press/release to a keycode
-    K(evdev::Key),
-    /// Press event sends a sequence of key press/release events.
-    /// Release does nothing.
-    Ks(Vec<evdev::Key>), // Key click sequence
-    /// Press event sends a sequence of key press events.
-    /// Release sends the a key release sequence in reverse order
-    Kg(Vec<evdev::Key>), // Key group
+    Kg(KeyGroup),
     /// If a key is released quickly send first key press/release pair,
     /// but when it is still pressed after the timeout, press the second key
     /// and release it on key release.
-    Klong(evdev::Key, evdev::Key),
+    Klong(KeyGroup, KeyGroup),
     /// A short press for key, long press for activating a layer
-    Khl(evdev::Key, LayerId),
+    Khl(KeyGroup, LayerId),
     /// A short press for key, long press for activating a tap layer (Ltap)
-    Khtl(evdev::Key, LayerId),
-    /// Key event with mask. First a key release event is sent for each mask key,
-    /// then a click (press followed by release) of keys and at the end the mask
-    /// is replayed as keypress events in reverse order (the same as Kg)
-    Kms(Vec<evdev::Key>, Vec<evdev::Key>), // mask, click sequence
+    Khtl(KeyGroup, LayerId),
+
     /// Disable all layers except the base and the parameter
     Lmove(LayerId),
     /// Activate a layer
@@ -80,9 +71,5 @@ pub enum KeymapEvent {
     LhtL(LayerId, LayerId),
     /// Activate the first mentioned layer on press and deactivate on release. Additionally,
     /// if the elapsed time between press and release was short, send a press+release key event.
-    LhtK(LayerId, Key),
-    /// Activate the first mentioned layer on press and deactivate on release. Additionally,
-    /// if the elapsed time between press and release was short, send a sequence of key press
-    /// events followed by a reverse sequence of key release events (the same as Kg)
-    LhtKg(LayerId, Vec<Key>),
+    LhtK(LayerId, KeyGroup),
 }
