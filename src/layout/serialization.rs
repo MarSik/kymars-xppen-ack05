@@ -16,7 +16,7 @@ use super::keys::{G, S};
  */
 
 
-pub fn load_layout(s: &str) -> LayerSwitcher {
+pub fn load_layout(s: &str) -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ G().k(Key::KEY_F12).p(), G().k(Key::KEY_INSERT).p(),                             G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E).p(),
@@ -112,5 +112,5 @@ pub fn load_layout(s: &str) -> LayerSwitcher {
 
     let layers = vec![default_layer, color_layer, tools_layer, view_layer, draw_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }

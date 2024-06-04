@@ -20,9 +20,9 @@ pub enum KeyReleaseMode {
     ForceClick
 }
 
-pub struct LayerSwitcher {
+pub struct LayerSwitcher<'a> {
     /// Static configuration of layers
-    pub(super) layers: Vec<Layer>,
+    pub(super) layers: &'a Vec<Layer>,
     /// Runtime status of layers
     pub(super) layer_stack: Vec<LayerStackEntry>,
     /// Currently pressed keys needing release
@@ -39,8 +39,8 @@ pub struct LayerStackEntry {
     pub(super) active_keys: bool,
 }
 
-impl LayerSwitcher {
-    pub fn new(layers: Vec<Layer>) -> Self {
+impl <'a> LayerSwitcher<'a> {
+    pub fn new(layers: &'a Vec<Layer>) -> Self {
         Self {
             layers,
             layer_stack: Vec::new(),
@@ -53,7 +53,7 @@ impl LayerSwitcher {
     /// MUST be called before any keys are processed
     pub fn start(&mut self) {
         self.layer_stack.clear();
-        for layer in &self.layers {
+        for layer in self.layers {
             self.layer_stack.push(LayerStackEntry { status: layer.status_on_reset,
                 active_keys: layer.status_on_reset != LayerStatus::LayerDisabled && layer.status_on_reset != LayerStatus::LayerPassthrough })
 
@@ -591,7 +591,7 @@ impl LayerSwitcher {
     /// keyboard to the OS.
     pub fn get_used_keys(&self) -> HashSet<Key> {
         let mut keyset = HashSet::new();
-        for l in &self.layers {
+        for l in self.layers {
             keyset.extend(&l.get_used_keys());
             keyset.extend(&l.on_active_keys);
         }

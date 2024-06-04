@@ -58,7 +58,7 @@ fn assert_emitted_keys(layout: &mut LayerSwitcher, keys: Vec<(Key, bool)>) {
 }
 
 // Single layer, basic key press and release test
-fn basic_layout() -> LayerSwitcher {
+fn basic_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ G().k(Key::KEY_LEFTALT).p(),   G().k(Key::KEY_B).p() ],
@@ -73,14 +73,15 @@ fn basic_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 mod testtime;
 
 #[test]
 fn test_basic_layout() {
-    let mut layout = basic_layout();
+    let layout_vec = basic_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
 
     let mut t = TestTime::start();
@@ -106,7 +107,7 @@ fn test_basic_layout() {
 
 // Dual layout, basic test simulating Shift behavior (hold to stay in the second layer)
 // It also tests pass-through to lower layer and inheritance from inactive layer
-fn basic_layered_layout() -> LayerSwitcher {
+fn basic_layered_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Lhold(1),              G().k(Key::KEY_B).p() ],
@@ -149,12 +150,13 @@ fn basic_layered_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer, inh_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_basic_layered_layout() {
-    let mut layout = basic_layered_layout();
+    let layout_vec = basic_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
 
     let mut t = TestTime::start();
@@ -186,7 +188,8 @@ fn test_basic_layered_layout() {
 
 #[test]
 fn test_basic_layered_layout_cross_release() {
-    let mut layout = basic_layered_layout();
+    let layout_vec = basic_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -212,7 +215,7 @@ fn test_basic_layered_layout_cross_release() {
 }
 
 // Dual layout, basic test simulating dead-key (sticky) behavior (stay in the second layer until next key is pressed)
-fn tap_layered_layout() -> LayerSwitcher {
+fn tap_layered_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Ltap(1),               G().k(Key::KEY_B).p() ],
@@ -241,12 +244,13 @@ fn tap_layered_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_tap_layered_layout() {
-    let mut layout = tap_layered_layout();
+    let layout_vec = tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -271,7 +275,8 @@ fn test_tap_layered_layout() {
 
 #[test]
 fn test_tap_layered_hold() {
-    let mut layout = tap_layered_layout();
+    let layout_vec = tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -301,7 +306,8 @@ fn test_tap_layered_hold() {
 
 #[test]
 fn test_tap_layered_hold_crossed() {
-    let mut layout = tap_layered_layout();
+    let layout_vec = tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -338,7 +344,8 @@ fn test_tap_layered_hold_crossed() {
 
 #[test]
 fn test_tap_layered_hold_dual_crossed() {
-    let mut layout = tap_layered_layout();
+    let layout_vec = tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -375,7 +382,8 @@ fn test_tap_layered_hold_dual_crossed() {
 
 #[test]
 fn test_tap_layered_hold_dual_crossed_lifo() {
-    let mut layout = tap_layered_layout();
+    let layout_vec = tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -412,7 +420,7 @@ fn test_tap_layered_hold_dual_crossed_lifo() {
 
 // Dual layout, basic test simulating Shift behavior (hold to stay in the second layer),
 // but with a key in second layer disabling shift temporarily
-fn layered_layout_with_masked_key() -> LayerSwitcher {
+fn layered_layout_with_masked_key() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Lhold(1),              G().k(Key::KEY_B).p() ],
@@ -441,12 +449,13 @@ fn layered_layout_with_masked_key() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_layered_layout_w_masked_key() {
-    let mut layout = layered_layout_with_masked_key();
+    let layout_vec = layered_layout_with_masked_key();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -472,7 +481,7 @@ fn test_layered_layout_w_masked_key() {
 
 // Dual layout, basic test simulating Shift behavior (hold to stay in the second layer),
 // but with the second layer disabling active keys on press
-fn layered_layout_with_mask() -> LayerSwitcher {
+fn layered_layout_with_mask() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Lhold(1),              G().k(Key::KEY_B).p() ],
@@ -502,13 +511,14 @@ fn layered_layout_with_mask() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 
 #[test]
 fn test_layered_layout_w_mask() {
-    let mut layout = layered_layout_with_mask();
+    let layout_vec = layered_layout_with_mask();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -536,7 +546,8 @@ fn test_layered_layout_w_mask() {
 
 #[test]
 fn test_layered_layout_w_mask_crossed() {
-    let mut layout = layered_layout_with_mask();
+    let layout_vec = layered_layout_with_mask();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -563,7 +574,7 @@ fn test_layered_layout_w_mask_crossed() {
 }
 
 // Dual layout, basic test simulating hold layer with timeout behavior
-fn hold_and_tap_layered_layout() -> LayerSwitcher {
+fn hold_and_tap_layered_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ LhtL(1, 2),            G().k(Key::KEY_B).p() ],
@@ -604,12 +615,13 @@ fn hold_and_tap_layered_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer, tap_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_hold_and_tap_layered_layout() {
-    let mut layout = hold_and_tap_layered_layout();
+    let layout_vec = hold_and_tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -642,7 +654,8 @@ fn test_hold_and_tap_layered_layout() {
 
 #[test]
 fn test_hold_and_tap_layered_layout_long_press() {
-    let mut layout = hold_and_tap_layered_layout();
+    let layout_vec = hold_and_tap_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -669,7 +682,7 @@ fn test_hold_and_tap_layered_layout_long_press() {
 }
 
 // Dual layout, basic test simulating hold layer with key timeout behavior
-fn hold_and_tap_key_layered_layout() -> LayerSwitcher {
+fn hold_and_tap_key_layered_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ LhtK(1, G().k(Key::KEY_0)),   G().k(Key::KEY_B).p() ],
@@ -698,12 +711,13 @@ fn hold_and_tap_key_layered_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_hold_and_tap_key_layered_layout() {
-    let mut layout = hold_and_tap_key_layered_layout();
+    let layout_vec = hold_and_tap_key_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -731,7 +745,8 @@ fn test_hold_and_tap_key_layered_layout() {
 
 #[test]
 fn test_hold_and_tap_key_layered_layout_long_press() {
-    let mut layout = hold_and_tap_key_layered_layout();
+    let layout_vec = hold_and_tap_key_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -758,7 +773,7 @@ fn test_hold_and_tap_key_layered_layout_long_press() {
 }
 
 // Dual layout, basic test simulating hold layer with key timeout behavior
-fn hold_and_tap_keygroup_layered_layout() -> LayerSwitcher {
+fn hold_and_tap_keygroup_layered_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ LhtK(1, G().k(Key::KEY_LEFTALT).k(Key::KEY_0)),   G().k(Key::KEY_B).p(), ],
@@ -786,12 +801,13 @@ fn hold_and_tap_keygroup_layered_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_hold_and_tap_keygroup_layered_layout() {
-    let mut layout = hold_and_tap_keygroup_layered_layout();
+    let layout_vec = hold_and_tap_keygroup_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -819,7 +835,8 @@ fn test_hold_and_tap_keygroup_layered_layout() {
 
 #[test]
 fn test_hold_and_tap_keygroup_layered_layout_long_press() {
-    let mut layout = hold_and_tap_keygroup_layered_layout();
+    let layout_vec = hold_and_tap_keygroup_layered_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -846,7 +863,7 @@ fn test_hold_and_tap_keygroup_layered_layout_long_press() {
 }
 
 // Singlke layout, basic test simulating short and long presses
-fn short_long_press_layout() -> LayerSwitcher {
+fn short_long_press_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Klong(G().k(Key::KEY_0), G().k(Key::KEY_1)),   G().k(Key::KEY_B).p() ],
@@ -861,12 +878,13 @@ fn short_long_press_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_short_long_press_layout() {
-    let mut layout = short_long_press_layout();
+    let layout_vec = short_long_press_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -900,7 +918,7 @@ fn test_short_long_press_layout() {
 }
 
 // Dual layout, basic test simulating tap to key, hold to enable layer
-fn short_key_long_layer_layout() -> LayerSwitcher {
+fn short_key_long_layer_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Khl(G().k(Key::KEY_0), 1),   G().k(Key::KEY_B).p() ],
@@ -928,12 +946,13 @@ fn short_key_long_layer_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_short_key_long_layer_layout() {
-    let mut layout = short_key_long_layer_layout();
+    let layout_vec = short_key_long_layer_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -961,7 +980,8 @@ fn test_short_key_long_layer_layout() {
 
 #[test]
 fn test_short_key_long_layer_layout_long_press() {
-    let mut layout = short_key_long_layer_layout();
+    let layout_vec = short_key_long_layer_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -1000,7 +1020,7 @@ fn test_short_key_long_layer_layout_long_press() {
 }
 
 // Dual layout, basic test simulating tap to key, hold to enable tap layer
-fn short_key_long_tap_layer_layout() -> LayerSwitcher {
+fn short_key_long_tap_layer_layout() -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
             vec![ Khtl(G().k(Key::KEY_0), 1),   G().k(Key::KEY_B).p() ],
@@ -1028,12 +1048,13 @@ fn short_key_long_tap_layer_layout() -> LayerSwitcher {
 
     let layers = vec![default_layer, shift_layer];
 
-    LayerSwitcher::new(layers)
+    layers
 }
 
 #[test]
 fn test_short_key_long_tap_layer_layout() {
-    let mut layout = short_key_long_tap_layer_layout();
+    let layout_vec = short_key_long_tap_layer_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
@@ -1061,7 +1082,8 @@ fn test_short_key_long_tap_layer_layout() {
 
 #[test]
 fn test_short_key_long_tap_layer_layout_long_press() {
-    let mut layout = short_key_long_tap_layer_layout();
+    let layout_vec = short_key_long_tap_layer_layout();
+    let mut layout = LayerSwitcher::new(&layout_vec);
     layout.start();
     let mut t = TestTime::start();
 
