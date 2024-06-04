@@ -19,7 +19,7 @@ use super::keys::{G, S};
 pub fn load_layout(s: &str) -> Vec<Layer> {
     let keymap_default = vec![ // blocks
         vec![ // rows
-            vec![ G().k(Key::KEY_F12).p(), Klong(G().k(Key::KEY_INSERT), G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E)),  G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E).p(),
+            vec![ G().k(Key::KEY_F12).p(), Klong(G().k(Key::KEY_INSERT), G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E)),  Klong(G(), G().k(Key::KEY_DELETE)),
                   No,                      No,                                                                     LhtK(4, G().k(Key::KEY_B)),                       G().k(Key::KEY_LEFTCTRL).k(Key::KEY_Z).p(),
                   Lhold(1),                LhtK(2, G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E)),                                                                         Lhold(3),
 
