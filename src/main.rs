@@ -29,8 +29,8 @@ fn main() {
         // Read state data from device
         // When any button is pressed use read timeout so the long press can be
         // analyzed in between messages.
-        let result = xppen.read(!xppen_events.has_pressed());
-        //println!("{:?}", buttons);
+        let result = xppen.read(!xppen_events.has_short_pressed());
+        //println!("{:?}", result);
 
         if let XpPenResult::Keys(buttons) = result {
             // Compute state changes

@@ -110,4 +110,8 @@ impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
     pub fn has_pressed(&self) -> bool {
         !self.state.is_empty()
     }
+
+    pub fn has_short_pressed(&self) -> bool {
+        (&self.state).into_iter().any(|i| !i.1.1)
+    }
 }

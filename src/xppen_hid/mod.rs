@@ -54,6 +54,7 @@ fn open_keyboard(api: &HidApi) -> Option<&DeviceInfo> {
     None
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum XpPenResult {
     Timeout,
     TryAgain,
@@ -96,7 +97,7 @@ impl XpPenAct05 {
         let timeout = if block {
             -1
         } else {
-            100
+            25
         };
 
         let res = self.device.read_timeout(&mut buf[..], timeout).unwrap();
