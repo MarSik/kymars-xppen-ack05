@@ -31,12 +31,11 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn get_key_event(&self, coords: KeyCoords) -> KeymapEvent {
+    pub fn get_key_event(&self, coords: KeyCoords) -> &KeymapEvent {
         self.keymap.get(coords.0 as usize)
             .and_then(|block| block.get(coords.1 as usize))
             .and_then(|row| row.get(coords.2 as usize))
             .unwrap_or(&self.default_action)
-            .clone()
     }
 
     pub fn get_used_keys(&self) -> Vec<Key> {
