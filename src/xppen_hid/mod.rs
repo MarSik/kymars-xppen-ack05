@@ -42,15 +42,30 @@ impl HasState for XpPenButtons {
     }
 }
 
-
-fn open_keyboard(api: &HidApi) -> Option<&DeviceInfo> {
+fn open_keyboard(api: &HidApi) -> Option<HidDevice> {
     for device in api.device_list() {
-        if device.vendor_id() == VID && device.product_id() == PID && device.interface_number() == 2 {
-            println!("SELECTING {:?} {:?} {:?} {:?}", device, device.manufacturer_string(), device.product_string(), device.serial_number());
-            return Some(device)
+        if device.vendor_id() == VID
+            && device.product_id() == PID
+            && device.usage_page() == 0xff0a
+            && device.usage() == 0x1
+        {
+            println!(
+                "SELECTING {:?} {:?} {:?} {:?} interface: {} usage: {:04x} ({:04x})",
+                device.path(),
+                device.manufacturer_string(),
+                device.product_string(),
+                device.serial_number(),
+                device.interface_number(),
+                device.usage(),
+                device.usage_page()
+            );
+            if let HidResult::Ok(hid) = device.open_device(api) {
+                return Some(hid);
+            }
         }
     }
 
+    println!("No device found.");
     None
 }
 
@@ -66,25 +81,49 @@ impl XpPenAct05 {
         let api = hidapi::HidApi::new().unwrap();
 
         // Print out information about all connected devices
-        //for device in api.device_list() {
-        //    println!("{:?} {:?} {:?} {:?} {:?}", device, device.manufacturer_string(), device.product_string(), device.serial_number(), device.interface_number());
-        //}
+        for device in api.device_list() {
+            println!(
+                "0x{:04x}:0x{:04x} 0x{:04x}:0x{:04x} {:?} {:?} {:?} {:?} {:?} {:?} {:?} {:?}",
+                device.vendor_id(),
+                device.product_id(),
+                device.usage(),
+                device.usage_page(),
+                device,
+                device.manufacturer_string(),
+                device.product_string(),
+                device.serial_number(),
+                device.interface_number(),
+                device.bus_type(),
+                device.release_number(),
+                device.path()
+            );
+        }
 
         // Connect to device using its VID and PID
-        let device = open_keyboard(&api).unwrap().open_device(&api).unwrap();
+        let device = open_keyboard(&api).unwrap();
         println!("Device: {:?}", device);
 
         // Initialize XP-Pen ACT05
         // This was sniffed from the USB communication between the official application
         // and the device. It switches the protocol to represent each key with one bit
         // instead of sending HID scan codes.
-        let buf = [0x02, 0xb0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-        let res = device.write(&buf).unwrap();
-        println!("Wrote: {:?} byte(s)", res);
-
-        Self {
-            device
+        let bus = device
+            .get_device_info()
+            .map_or(BusType::Usb, |info| info.bus_type());
+        if let BusType::Usb = bus {
+            println!("Configuring USB HID key bit mode.");
+            let buf = [0x02, 0xb0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+            let res = device.write(&buf).unwrap();
+            println!("Wrote: {:?} byte(s)", res);
+        } else if let BusType::Bluetooth = bus {
+            println!("Configuring Bluetooth HID key bit mode.");
+            panic!("Bluetooth connection is currently not supported!.");
+            //let buf = [0x02, 0xb0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+            //let res = device.write(&buf).unwrap();
+            //println!("Wrote: {:?} byte(s)", res);
         }
+
+        Self { device }
     }
 
     pub fn set_blocking(&self) {
