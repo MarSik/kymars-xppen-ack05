@@ -1,73 +1,65 @@
-use std::collections::VecDeque;
-
-use toml;
 use evdev::Key;
+use toml;
 
-use super::layer::Layer;
-use super::switcher::LayerSwitcher;
-use super::types::KeymapEvent::{Inh, No, Ldisable, Lactivate, Lhold, Lmove, Ltap, Kg, Pass, LhtK, Klong};
 use super::keys::{G, S};
+use super::layer::Layer;
+use super::types::KeymapEvent::{
+    Inh, Kg, Klong, Lactivate, Ldisable, Lhold, LhtK, Lmove, Ltap, No, Pass,
+};
 
 /*
 
 ( CCW=10 ROT CW=11 ) [ 0 ][ 1 ][ 2 ][ 6 ]
                      [ 3 ][ 4 ][ 5 ][ _ ]
                      [ 7 ][    8   ][ 9 ]
+
+ or in the other orientation
+
+ [ 9 ][    8   ][ 7 ]
+ [ 6 |[ 5 ][ 4 ][ 3 ]
+ | _ ][ 2 ][ 1 ][ 0 ]  ( CCW=10 ROT CW=11 )
+
  */
 
-
 pub fn load_layout(s: &str) -> Vec<Layer> {
-    let keymap_default = vec![ // blocks
-        vec![ // rows
-            vec![ G().k(Key::KEY_F12).p(), Klong(G().k(Key::KEY_INSERT), G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E)),  Klong(G(), G().k(Key::KEY_DELETE)),
-                  No,                      No,                                                                     LhtK(4, G().k(Key::KEY_B)),                       G().k(Key::KEY_LEFTCTRL).k(Key::KEY_Z).p(),
-                  Lhold(1),                LhtK(2, G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E)),                                                                         Lhold(3),
-
-                  G().k(Key::KEY_MINUS).p(), G().k(Key::KEY_SLASH).p() ] // should be minus and equals
+    // Layer 0 - default
+    let keymap_default = vec![
+        // blocks
+        vec![
+            // rows
+            vec![
+                /*  0  */
+                No,
+                /*  1  */
+                No,
+                /*  2  */
+                Klong(G(), G().k(Key::KEY_DELETE)),
+                /*  3  */
+                Lhold(3),
+                /*  4  */
+                LhtK(1, G().k(Key::KEY_B)),
+                /*  5  */
+                LhtK(4, G()),
+                /*  6  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_Z).p(),
+                /*  7  */
+                LhtK(5, G().k(Key::KEY_INSERT)),
+                /*  8  */
+                LhtK(2, G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_E)),
+                /*  9  */
+                Klong(
+                    G().k(Key::KEY_F12),
+                    G().k(Key::KEY_LEFTCTRL).k(Key::KEY_LEFTSHIFT).k(Key::KEY_A),
+                ),
+                /* CCW */
+                G().k(Key::KEY_MINUS).p(),
+                /*  CW */
+                G().k(Key::KEY_SLASH).p(), // should be minus and equals
+            ],
         ],
     ];
 
-    let keymap_color = vec![ // blocks
-        vec![ // rows
-            vec![ G().k(Key::KEY_L).p(),         G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),      Pass,
-                  G().k(Key::KEY_K).p(),         No,                                           No,              G().k(Key::KEY_SLASH).p(),
-                  No,                    G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),  No,
-
-                  G().k(Key::KEY_RIGHTBRACE).p(),   G().k(Key::KEY_LEFTBRACE).p() ]
-        ],
-    ];
-
-    let keymap_view = vec![ // blocks
-    vec![ // rows
-        vec![ No,             G().k(Key::KEY_4).p(),     G().k(Key::KEY_6).p(),
-              No,   Pass,     G().k(Key::KEY_5).p(),     G().k(Key::KEY_LEFTCTRL).k(Key::KEY_LEFTSHIFT).k(Key::KEY_Z).p(),
-              No,             Pass,     No,
-
-              Pass, Pass   ]
-        ],
-    ];
-
-    let keymap_tools = vec![ // blocks
-    vec![ // rows
-        vec![ G().k(Key::KEY_ESC).p(),                               G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),   G().k(Key::KEY_LEFTCTRL).k(Key::KEY_T).p(),
-              No,                                            G().k(Key::KEY_5).p(),                             No,        G().k(Key::KEY_ENTER).p(),
-              G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),   No,                                        G().k(Key::KEY_LEFTSHIFT).k(Key::KEY_SPACE).p(),
-
-              G().k(Key::KEY_6).p(), G().k(Key::KEY_4).p() ]
-        ],
-    ];
-
-    let keymap_pass = vec![ // blocks
-    vec![ // rows
-        vec![ Pass,   Pass,   Pass,
-              Pass,   Pass,   Pass,  Pass,
-              Pass,   Pass,   Pass,
-
-              Pass, Pass ]
-        ],
-    ];
-
-    let default_layer = Layer{
+    let default_layer = Layer {
         status_on_reset: super::types::LayerStatus::LayerActive,
         inherit: None,
         on_active_keys: vec![],
@@ -78,7 +70,42 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
         default_action: super::types::KeymapEvent::Pass,
     };
 
-    let color_layer = Layer{
+
+    // Layer 1 - Color
+    let keymap_color = vec![
+        // blocks
+        vec![
+            // rows
+            vec![
+                /*  0  */
+                No,
+                /*  1  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),
+                /*  2  */
+                Pass,
+                /*  3  */
+                G().k(Key::KEY_K).p(),
+                /*  4  */
+                No,
+                /*  5  */
+                No,
+                /*  6  */
+                G().k(Key::KEY_SLASH).p(),
+                /*  7  */
+                G().k(Key::KEY_L).p(),
+                /*  8  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),
+                /*  9  */
+                No,
+                /* CCW */
+                G().k(Key::KEY_RIGHTBRACE).p(),
+                /*  CW */
+                G().k(Key::KEY_LEFTBRACE).p(),
+            ],
+        ],
+    ];
+
+    let color_layer = Layer {
         status_on_reset: super::types::LayerStatus::LayerPassthrough,
         on_active_keys: vec![Key::KEY_LEFTCTRL],
         disable_active_on_press: true,
@@ -86,7 +113,42 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
         ..default_layer.clone()
     };
 
-    let tools_layer = Layer{
+
+    // Layer 2 - Tools
+    let keymap_tools = vec![
+        // blocks
+        vec![
+            // rows
+            vec![
+                /*  0  */
+                G().k(Key::KEY_ESC).p(),
+                /*  1  */
+                G().k(Key::KEY_5).p(),
+                /*  2  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_T).p(),
+                /*  3  */
+                No,
+                /*  4  */
+                G().k(Key::KEY_ENTER).p(),
+                /*  5  */
+                No,
+                /*  6  */
+                No,
+                /*  7  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),
+                /*  8  */
+                No,
+                /*  9  */
+                G().k(Key::KEY_T).p(),
+                /* CCW */
+                G().k(Key::KEY_6).p(),
+                /*  CW */
+                G().k(Key::KEY_4).p(),
+            ],
+        ],
+    ];
+
+    let tools_layer = Layer {
         status_on_reset: super::types::LayerStatus::LayerPassthrough,
         on_active_keys: vec![Key::KEY_LEFTSHIFT],
         disable_active_on_press: true,
@@ -94,7 +156,45 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
         ..default_layer.clone()
     };
 
-    let view_layer = Layer{
+
+    // Layer 3 - View
+    let keymap_view = vec![
+        // blocks
+        vec![
+            // rows
+            vec![
+                /*  0  */
+                No,
+                /*  1  */
+                G().k(Key::KEY_4).p(),
+                /*  2  */
+                G().k(Key::KEY_6).p(),
+                /*  3  */
+                G().k(Key::KEY_LEFTCTRL)
+                    .k(Key::KEY_LEFTSHIFT)
+                    .k(Key::KEY_Z)
+                    .p(),
+                /*  4  */
+                Pass,
+                /*  5  */
+                G().k(Key::KEY_5).p(),
+                /*  6  */
+                No,
+                /*  7  */
+                No,
+                /*  8  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_SPACE).p(),
+                /*  9  */
+                No,
+                /* CCW */
+                Pass,
+                /*  CW */
+                Pass,
+            ],
+        ],
+    ];
+
+    let view_layer = Layer {
         status_on_reset: super::types::LayerStatus::LayerPassthrough,
         on_active_keys: vec![Key::KEY_SPACE],
         disable_active_on_press: true,
@@ -102,7 +202,21 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
         ..default_layer.clone()
     };
 
-    let draw_layer = Layer{
+
+    // Used in Layer 4 - Drawing
+    let keymap_pass = vec![
+        // blocks
+        vec![
+            // rows
+            vec![
+                /*  0  */ Pass, /*  1  */ Pass, /*  2  */ Pass, /*  3  */ Pass,
+                /*  4  */ Pass, /*  5  */ Pass, /*  6  */ Pass, /*  7  */ Pass,
+                /*  8  */ Pass, /*  9  */ Pass, /* CCW */ Pass, /*  CW */ Pass,
+            ],
+        ],
+    ];
+
+    let draw_layer = Layer {
         status_on_reset: super::types::LayerStatus::LayerPassthrough,
         on_active_keys: vec![Key::KEY_V],
         disable_active_on_press: true,
@@ -110,7 +224,59 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
         ..default_layer.clone()
     };
 
-    let layers = vec![default_layer, color_layer, tools_layer, view_layer, draw_layer];
+    // Layer 5 - Layer actions
+    let keymap_layer = vec![
+        // blocks
+        vec![
+            // rows
+            vec![
+                /*  0  */
+                Pass,
+                /*  1  */
+                Pass,
+                /*  2  */
+                Pass,
+                /*  3  */
+                Pass,
+                /*  4  */
+                Pass,
+                /*  5  */
+                Pass,
+                /*  6  */
+                Pass,
+                /*  7  */
+                Pass,
+                /*  8  */
+                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),
+                /*  9  */
+                Pass,
+                /* CCW */
+                Pass,
+                /*  CW */
+                Pass,
+            ],
+        ],
+    ];
+
+    let layers_layer = Layer {
+        status_on_reset: super::types::LayerStatus::LayerPassthrough,
+        on_active_keys: vec![],
+        disable_active_on_press: true,
+        keymap: keymap_layer,
+        ..default_layer.clone()
+    };
+
+
+    // Layer ordering, do not change!
+
+    let layers = vec![
+        default_layer,
+        color_layer,
+        tools_layer,
+        view_layer,
+        draw_layer,
+        layers_layer,
+    ];
 
     layers
 }
