@@ -80,9 +80,9 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
                 /*  0  */
                 No,
                 /*  1  */
-                G().k(Key::KEY_LEFTCTRL).k(Key::KEY_E).p(),
+                No,
                 /*  2  */
-                Pass,
+                No,
                 /*  3  */
                 G().k(Key::KEY_K).p(),
                 /*  4  */
@@ -90,7 +90,7 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
                 /*  5  */
                 No,
                 /*  6  */
-                G().k(Key::KEY_SLASH).p(),
+                No,
                 /*  7  */
                 G().k(Key::KEY_L).p(),
                 /*  8  */
@@ -141,9 +141,9 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
                 /*  9  */
                 G().k(Key::KEY_T).p(),
                 /* CCW */
-                G().k(Key::KEY_6).p(),
+                No,
                 /*  CW */
-                G().k(Key::KEY_4).p(),
+                No,
             ],
         ],
     ];
@@ -166,20 +166,20 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
                 /*  0  */
                 No,
                 /*  1  */
-                G().k(Key::KEY_4).p(),
+                No,
                 /*  2  */
-                G().k(Key::KEY_6).p(),
+                No,
                 /*  3  */
+                No,
+                /*  4  */
+                G().k(Key::KEY_5).p(),
+                /*  5  */
+                No,
+                /*  6  */
                 G().k(Key::KEY_LEFTCTRL)
                     .k(Key::KEY_LEFTSHIFT)
                     .k(Key::KEY_Z)
                     .p(),
-                /*  4  */
-                Pass,
-                /*  5  */
-                G().k(Key::KEY_5).p(),
-                /*  6  */
-                No,
                 /*  7  */
                 No,
                 /*  8  */
@@ -187,9 +187,9 @@ pub fn load_layout(s: &str) -> Vec<Layer> {
                 /*  9  */
                 No,
                 /* CCW */
-                Pass,
+                G().k(Key::KEY_6).p(),
                 /*  CW */
-                Pass,
+                G().k(Key::KEY_4).p(),
             ],
         ],
     ];

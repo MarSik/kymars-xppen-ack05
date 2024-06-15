@@ -10,6 +10,14 @@ This only works in Linux and was only tested on Fedora Silverblue 39.
 ( CW=11  )   [ 7 ][    8   ][ 9 ]
 ```
 
+or when rotated
+
+```
+ [ 9 ][    8   ][ 7 ]
+ [ 6 |[ 5 ][ 4 ][ 3 ]
+ | _ ][ 2 ][ 1 ][ 0 ]  ( CCW=10 ROT CW=11 )
+```
+
 Rotary encoder sends pulses as key presses.
 
 ## ACT05 protocol
@@ -65,51 +73,68 @@ The keymap can be modified in the [load_layout](src/layout/serialization.rs#L18)
 ( -> CW  )   [ 7 ][    8   ][ 9 ]
 ```
 
+```
+ [ 9 ][    8   ][ 7 ]  ( CCW <- 10 )
+ [ 6 |[ 5 ][ 4 ][ 3 ]      ROT
+ | _ ][ 2 ][ 1 ][ 0 ]  ( ->  CW 11 )
+```
+
 ### (0) Base layer
 
-- *press* **<1>**: presses `Insert` - new paint layer
-- *press* **<5>**: presses `B` - select the brush tool
-- *hold* **<5>**: holds `V` - draw a line
+- *long* **<2>**: presses `Delete` - clear layer
+- *hold* **[3]**: activates `layer 3 - view and move`
+- *click* **<4>**: presses `B` - select the brush tool
+- *hold* **[4]**: activates `layer 1 - colors`
+- *hold* **[5]**: activates `layer 4 - drawing` (which holds `V` - line mode)
 - *press* **<6>**: presses `Ctrl-Z` - undo
-- *hold* **[7]**: holds `Ctrl` and activates `layer 1`
-- *hold* **[8]**: holds `Shift` and activates `layer 3`
+- *click* **<7>**: presses `Insert` - new paint layer
+- *hold* **[7]**: activates `layer 5 - layers`
 - *click* **<8>**: sends `Shift-E` - I have that mapped to `toggle eraser mode`
-- *hold* **[9]**: holds `Space` and activates `layer 2`
+- *hold* **[8]**: activates `layer 2 - tools`
+- *click* **[9]**: Sends `F12` - I have that mapped to `freehand selection tool`
+- *long* **[9]**: Sends `Ctrl+Shift+A` - clear selection
 - **ROT**: zoom viewport
 
 ### (1) Color and painting layer
 
 When this layer is active you can tap with the stylus to
-pick color.
+pick color (it holds `Ctrl`).
 
-- *click* **<0>**: presses `L` - lighter color
-- *click* **<1>**: presses `Ctrl-E` - merge layer down
 - *click* **<3>**: presses `K` - darker color
+- *click* **<7>**: presses `L` - lighter color
 - *click* **<8>**: presses `Ctrl+Space` - mirror view horizontaly
 - **ROT**: brush size
 
-### (2) View and move layer
-
-When this layer is active you can drag with the stylus to move
-canvas view.
-
-- *click* **<1>**: presses `4` - rotate viewport CCW
-- *click* **<2>**: presses `6` - rotate viewport CW
-- *click* **<4>**: presses `5` - reset viewport rotation
-- *click* **<6>**: presses `Ctrl-Shift-Z` - redo
-- **ROT**: rotate viewport
-
-### (3) Tool layer
+### (2) Tool layer
 
 When this layer is active you can drag with the stylus to change
 brush size.
 
 - *click* **<0>**: presses `ESC` - cancel
+- *click* **<1>**: presses `5` - reset viewport rotation
 - *click* **<2>**: presses `Ctrl-T` - transform tool
-- *click* **<6>**: presses `Enter` - confirm transformation
+- *click* **<4>**: presses `Enter` - confirm
 - *click* **<7>**: presses `Ctrl+Space` - mirror view horizontaly
-- *hold* **[9]**: holds `Shift+Space` - rotate viewport
+- *click* **<9>**: presses `T` - move layer
 
+### (3) View and move layer
+
+When this layer is active you can drag with the stylus to move
+canvas view (it holds `space`).
+
+- *click* **<4>**: presses `5` - reset viewport rotation
+- *click* **<6>**: presses `Ctrl-Shift-Z` - redo
+- *click* **<8>**: presses `Ctrl-Space` - mirror viewport
+- **ROT**: rotate viewport
+
+### (4) Drawing layer
+
+When this layer is active it holds `V` which allows drawing
+straight lines.
+
+### (5) Layers layer
+
+- *click* **<8>**: presses `Ctrl-E` - merge layer down
 
 ## Authors and license
 
