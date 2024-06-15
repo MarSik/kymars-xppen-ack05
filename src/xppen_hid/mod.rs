@@ -1,5 +1,5 @@
 use enumset::{EnumSet, EnumSetType};
-use hidapi::{self, DeviceInfo, HidApi, HidDevice};
+use hidapi::{self, BusType, HidApi, HidDevice, HidResult};
 
 use crate::kbd_events::HasState;
 use crate::layout::types::KeyCoords;
@@ -9,7 +9,7 @@ const VID: u16 = 0x28bd;
 
 // XP-Pen ACT05
 pub struct XpPenAct05 {
-    device: HidDevice
+    device: HidDevice,
 }
 
 #[derive(EnumSetType, Debug, Hash)]
@@ -25,12 +25,12 @@ pub enum XpPenButtons {
     XpB09,
     XpB10,
     XpRoCW,
-    XpRoCCW
+    XpRoCCW,
 }
 
 impl Into<KeyCoords> for XpPenButtons {
     fn into(self) -> KeyCoords {
-        return KeyCoords(0, 0, self as u8)
+        return KeyCoords(0, 0, self as u8);
     }
 }
 
@@ -73,7 +73,7 @@ fn open_keyboard(api: &HidApi) -> Option<HidDevice> {
 pub enum XpPenResult {
     Timeout,
     TryAgain,
-    Keys(EnumSet<XpPenButtons>)
+    Keys(EnumSet<XpPenButtons>),
 }
 
 impl XpPenAct05 {
@@ -127,17 +127,13 @@ impl XpPenAct05 {
     }
 
     pub fn set_blocking(&self) {
-        let _= self.device.set_blocking_mode(true);
+        let _ = self.device.set_blocking_mode(true);
     }
 
     pub fn read(&self, block: bool) -> XpPenResult {
         let mut buf = [0u8; 32];
 
-        let timeout = if block {
-            -1
-        } else {
-            25
-        };
+        let timeout = if block { -1 } else { 25 };
 
         let res = self.device.read_timeout(&mut buf[..], timeout).unwrap();
         //println!("Read: {:?}", &buf[..res]);

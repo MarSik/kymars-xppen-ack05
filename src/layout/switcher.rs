@@ -17,7 +17,7 @@ const HOLD_THRESHOLD_MS: Duration = Duration::from_millis(200);
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum KeyReleaseMode {
     Reverse,
-    ForceClick
+    ForceClick,
 }
 
 pub struct LayerSwitcher<'a> {
@@ -27,7 +27,13 @@ pub struct LayerSwitcher<'a> {
     pub(super) layer_stack: Vec<LayerStackEntry>,
     /// Currently pressed keys needing release
     /// with their originating layer and release keycodes
-    pub(super) presses: Vec<(LayerId, KeyCoords, KeyReleaseMode, Option<&'a KeyGroup>, Instant)>,
+    pub(super) presses: Vec<(
+        LayerId,
+        KeyCoords,
+        KeyReleaseMode,
+        Option<&'a KeyGroup>,
+        Instant,
+    )>,
 
     /// Queue of generated keycodes to issue to the OS
     emitted_codes: VecDeque<(Key, bool)>,
@@ -39,7 +45,7 @@ pub struct LayerStackEntry {
     pub(super) active_keys: bool,
 }
 
-impl <'a> LayerSwitcher<'a> {
+impl<'a> LayerSwitcher<'a> {
     pub fn new(layers: &'a Vec<Layer>) -> Self {
         Self {
             layers,
@@ -54,9 +60,11 @@ impl <'a> LayerSwitcher<'a> {
     pub fn start(&mut self) {
         self.layer_stack.clear();
         for layer in self.layers {
-            self.layer_stack.push(LayerStackEntry { status: layer.status_on_reset,
-                active_keys: layer.status_on_reset != LayerStatus::LayerDisabled && layer.status_on_reset != LayerStatus::LayerPassthrough })
-
+            self.layer_stack.push(LayerStackEntry {
+                status: layer.status_on_reset,
+                active_keys: layer.status_on_reset != LayerStatus::LayerDisabled
+                    && layer.status_on_reset != LayerStatus::LayerPassthrough,
+            })
         }
         self.layer_stack[0].status = LayerStatus::LayerActive;
         self.presses.clear();
@@ -176,7 +184,13 @@ impl <'a> LayerSwitcher<'a> {
     /// Activate layer `idx` and keep it activated while `coords` is pressed.
     /// At `coords` release check elapsed time and emit configured keys when
     /// the press duration was shorter than `HOLD_THRESHOLD_MS`
-    fn layer_hold_key(&mut self, activate_idx: LayerId, coords: KeyCoords, t: Instant, key_layer: LayerId) {
+    fn layer_hold_key(
+        &mut self,
+        activate_idx: LayerId,
+        coords: KeyCoords,
+        t: Instant,
+        key_layer: LayerId,
+    ) {
         // Disabled layer, ignore action
         if self.layer_stack[activate_idx].status == LayerStatus::LayerDisabled {
             return;
@@ -187,7 +201,8 @@ impl <'a> LayerSwitcher<'a> {
             return;
         }
 
-        self.layer_stack[activate_idx].status = LayerStatus::LayerHoldAndTapKey(coords, t, key_layer);
+        self.layer_stack[activate_idx].status =
+            LayerStatus::LayerHoldAndTapKey(coords, t, key_layer);
         self.on_layer_activation(activate_idx);
     }
 
@@ -222,7 +237,7 @@ impl <'a> LayerSwitcher<'a> {
         // Active keys are not pressed, because some other key from the layer is active
         // and the layer is configured to disable active keys in such case
         if !self.layer_stack[idx].active_keys {
-            return
+            return;
         }
 
         let keys = &self.layers[idx].on_active_keys;
@@ -242,18 +257,20 @@ impl <'a> LayerSwitcher<'a> {
 
     fn after_key_release(&mut self, layer: LayerId) {
         // Layer not enabled
-        if self.layer_stack[layer].status == LayerStatus::LayerDisabled || self.layer_stack[layer].status == LayerStatus::LayerPassthrough {
-            return
+        if self.layer_stack[layer].status == LayerStatus::LayerDisabled
+            || self.layer_stack[layer].status == LayerStatus::LayerPassthrough
+        {
+            return;
         }
 
         // Active keys are always active, no need to reactivate
         if !self.layers[layer].disable_active_on_press {
-            return
+            return;
         }
 
         // Keys are already active, no need to reactivate
         if self.layer_stack[layer].active_keys {
-            return
+            return;
         }
 
         // Re-enable active keys
@@ -263,7 +280,14 @@ impl <'a> LayerSwitcher<'a> {
         self.layer_stack[layer].active_keys = true;
     }
 
-    fn keygroup_press(&mut self, kg: &'a KeyGroup, coords: KeyCoords, srclayer: LayerId, t: Instant, force_click: bool) {
+    fn keygroup_press(
+        &mut self,
+        kg: &'a KeyGroup,
+        coords: KeyCoords,
+        srclayer: LayerId,
+        t: Instant,
+        force_click: bool,
+    ) {
         self.before_key_press(srclayer);
         for k in &kg.mask {
             self.emit_keycodes(coords, &k, false);
@@ -289,7 +313,8 @@ impl <'a> LayerSwitcher<'a> {
 
             self.after_key_release(srclayer);
         } else {
-            self.presses.push((srclayer, coords, KeyReleaseMode::Reverse, Some(kg), t));
+            self.presses
+                .push((srclayer, coords, KeyReleaseMode::Reverse, Some(kg), t));
         }
     }
 
@@ -311,13 +336,16 @@ impl <'a> LayerSwitcher<'a> {
 
     /// Get the number of currently recorded presses originating from `layer`
     pub(crate) fn active_keys_from_layer(&self, layer: LayerId) -> usize {
-        self.presses.iter().fold(0, |acc, (a, _, _, _, _)| {
-            if (*a) == layer {
-                acc + 1
-            } else {
-                acc
-            }
-        })
+        self.presses.iter().fold(
+            0,
+            |acc, (a, _, _, _, _)| {
+                if (*a) == layer {
+                    acc + 1
+                } else {
+                    acc
+                }
+            },
+        )
     }
 
     /// This is the main keypress handling function
@@ -325,33 +353,41 @@ impl <'a> LayerSwitcher<'a> {
         // Identify the action associated with the current event
         let (srclayer, ev) = self.get_key_event(coords);
         if ev.is_none() {
-            return
+            return;
         }
         let ev = ev.unwrap();
 
         // Process the event
         match ev {
             // Nothing or indirection leading nowhere
-            KeymapEvent::No => {},
-            KeymapEvent::Inh => {},
-            KeymapEvent::Pass => {},
+            KeymapEvent::No => {}
+            KeymapEvent::Inh => {}
+            KeymapEvent::Pass => {}
 
             KeymapEvent::Kg(kg) => {
                 self.keygroup_press(&kg, coords, srclayer, t, false);
-            },
+            }
             KeymapEvent::Klong(kshort, _) => {
                 // Record the press with a short key release entry
-                self.presses.push((srclayer, coords, KeyReleaseMode::ForceClick, Some(kshort), t));
-            },
+                self.presses.push((
+                    srclayer,
+                    coords,
+                    KeyReleaseMode::ForceClick,
+                    Some(kshort),
+                    t,
+                ));
+            }
 
             KeymapEvent::Khl(k, _) => {
                 // Record the press with a short key release entry
-                self.presses.push((srclayer, coords, KeyReleaseMode::ForceClick, Some(k), t));
-            },
+                self.presses
+                    .push((srclayer, coords, KeyReleaseMode::ForceClick, Some(k), t));
+            }
             KeymapEvent::Khtl(k, _) => {
                 // Record the press with a short key release entry
-                self.presses.push((srclayer, coords, KeyReleaseMode::ForceClick, Some(k), t));
-            },
+                self.presses
+                    .push((srclayer, coords, KeyReleaseMode::ForceClick, Some(k), t));
+            }
 
             KeymapEvent::Lmove(idx) => self.layer_move(*idx),
             KeymapEvent::Lhold(idx) => self.layer_hold(*idx, coords),
@@ -360,11 +396,10 @@ impl <'a> LayerSwitcher<'a> {
 
             KeymapEvent::Ldisable(idx) => {
                 self.layer_disable(*idx);
-
-            },
+            }
             KeymapEvent::Ldeactivate(idx) => {
                 self.layer_deactivate(*idx);
-            },
+            }
             KeymapEvent::LhtL(idx, idx2) => self.layer_hold_tap(*idx, *idx2, coords, t),
             KeymapEvent::LhtK(idx, _) => self.layer_hold_key(*idx, coords, t, srclayer),
         }
@@ -381,13 +416,13 @@ impl <'a> LayerSwitcher<'a> {
         // Identify the action associated with the current event
         let press = self.find_press(coords);
         if press.is_none() {
-            return
+            return;
         }
         let press = press.unwrap();
 
         // Long press was still too short, wait for another one
         if t - press.4 <= HOLD_THRESHOLD_MS {
-            return
+            return;
         }
 
         // In case no release events were recorded consult the keymap and press the long keys
@@ -404,30 +439,41 @@ impl <'a> LayerSwitcher<'a> {
                     // Emit and record the long press entry
                     self.keygroup_press(&klong, coords, press.1, t, true);
                 }
-            },
+            }
             KeymapEvent::Khtl(_, l) => {
                 // Remove the short press entry
                 self.presses.swap_remove(press.0);
                 self.layer_tap(*l, coords);
                 self.layer_stack[*l].status = LayerStatus::LayerActiveUntilAnyKeyPress;
-            },
+            }
             KeymapEvent::Khl(_, l) => {
                 // Remove the short press entry
                 self.presses.swap_remove(press.0);
                 self.layer_activate(*l);
-            },
+            }
             _ => {}
         }
     }
 
     /// Find if there is an associated recorded key release entry for `coords`
-    fn find_press(&self, coords: KeyCoords) -> Option<(usize, LayerId, KeyReleaseMode, Option<&'a KeyGroup>, Instant)> {
-        for (idx, (layer, coord, release_mode, kgroup, t)) in (&self.presses).into_iter().enumerate() {
+    fn find_press(
+        &self,
+        coords: KeyCoords,
+    ) -> Option<(
+        usize,
+        LayerId,
+        KeyReleaseMode,
+        Option<&'a KeyGroup>,
+        Instant,
+    )> {
+        for (idx, (layer, coord, release_mode, kgroup, t)) in
+            (&self.presses).into_iter().enumerate()
+        {
             if *coord == coords {
-                return Some((idx, *layer, *release_mode, *kgroup, *t))
+                return Some((idx, *layer, *release_mode, *kgroup, *t));
             }
         }
-        return None
+        return None;
     }
 
     /// This is the main key release handling function
@@ -439,12 +485,12 @@ impl <'a> LayerSwitcher<'a> {
                     if wait_coords == coords {
                         self.layer_deactivate(idx);
                     }
-                },
+                }
                 LayerStatus::LayerActiveUntilKeyReleaseTap(wait_coords) => {
                     if wait_coords == coords {
                         self.layer_stack[idx].status = LayerStatus::LayerActiveUntilAnyKeyPress;
                     }
-                },
+                }
                 LayerStatus::LayerHoldAndTapKey(wait_coords, t0, lidx) => {
                     if wait_coords == coords {
                         self.layer_deactivate(idx);
@@ -455,12 +501,12 @@ impl <'a> LayerSwitcher<'a> {
                             match kev {
                                 KeymapEvent::LhtK(_, k) => {
                                     self.keygroup_press(&k, coords, lidx, t, true);
-                                },
+                                }
                                 _ => {}
                             }
                         }
                     }
-                },
+                }
                 LayerStatus::LayerHoldAndTapToL(wait_coords, t0, next_layer) => {
                     if wait_coords == coords {
                         self.layer_deactivate(idx);
@@ -469,10 +515,11 @@ impl <'a> LayerSwitcher<'a> {
                         if elapsed < HOLD_THRESHOLD_MS {
                             self.layer_tap(next_layer, coords);
                             // This is the first release already, just wait for next key
-                            self.layer_stack[next_layer].status = LayerStatus::LayerActiveUntilAnyKeyPress;
+                            self.layer_stack[next_layer].status =
+                                LayerStatus::LayerActiveUntilAnyKeyPress;
                         }
                     }
-                },
+                }
                 _ => {}
             }
         }
@@ -480,7 +527,7 @@ impl <'a> LayerSwitcher<'a> {
         // Identify the action associated with the current event
         let press = self.find_press(coords);
         if press.is_none() {
-            return
+            return;
         }
         let press = press.unwrap();
 
@@ -500,7 +547,11 @@ impl <'a> LayerSwitcher<'a> {
         self.after_key_release(press.1);
     }
 
-    fn get_key_event_inheritance(&self, coords: KeyCoords, idx: LayerId) -> (LayerId, &'a KeymapEvent) {
+    fn get_key_event_inheritance(
+        &self,
+        coords: KeyCoords,
+        idx: LayerId,
+    ) -> (LayerId, &'a KeymapEvent) {
         let mut layer_idx = idx;
         loop {
             let ev = (&self.layers)[layer_idx].get_key_event(coords);
@@ -530,25 +581,25 @@ impl <'a> LayerSwitcher<'a> {
                     } else {
                         break; // no parent
                     }
-                },
+                }
                 KeymapEvent::Pass => break,
             }
         }
 
-        return (0, &(&self.layers)[layer_idx].default_action)
+        return (0, &(&self.layers)[layer_idx].default_action);
     }
 
     /// Resolve the keymap event currently mapped to key `coords`. Take into
     /// account the state of all layers and inheritance.
     /// Returns the keymap event and the layer it came from
     fn get_key_event(&self, coords: KeyCoords) -> (LayerId, Option<&'a KeymapEvent>) {
-        'layer: for (idx, l) in (&self.layer_stack).into_iter().enumerate().rev() {
+        for (idx, l) in (&self.layer_stack).into_iter().enumerate().rev() {
             // Skip disabled layers
             if l.status == LayerStatus::LayerDisabled || l.status == LayerStatus::LayerPassthrough {
                 continue;
             }
 
-            let (layerid, ev) = self.get_key_event_inheritance(coords, idx);
+            let (_layerid, ev) = self.get_key_event_inheritance(coords, idx);
             if *ev != KeymapEvent::Pass {
                 return (idx, Some(ev));
             }
@@ -565,9 +616,13 @@ impl <'a> LayerSwitcher<'a> {
     /// This is the input entrypoint for external key events. Right now everything is processed
     /// as a result of a call to this method.
     pub fn process_keyevent<T>(&mut self, ev: KeyStateChange<T>, t: impl Into<Instant>)
-    where T: Into<KeyCoords>
+    where
+        T: Into<KeyCoords>,
     {
-        assert!(self.layer_stack.len() > 0, "The layout engine was not started.");
+        assert!(
+            self.layer_stack.len() > 0,
+            "The layout engine was not started."
+        );
         match ev {
             KeyStateChange::Pressed(k) => self.process_keyevent_press(k.into(), t.into()),
             KeyStateChange::Released(k) => self.process_keyevent_release(k.into(), t.into()),
@@ -576,14 +631,15 @@ impl <'a> LayerSwitcher<'a> {
                 let ti = t.into();
                 self.process_keyevent_press(k, ti);
                 self.process_keyevent_release(k, ti);
-            },
+            }
             KeyStateChange::LongPress(k) => self.process_keyevent_long_press(k.into(), t.into()),
         }
     }
 
     /// Consume all queued keycode events via the `renderer` closure.
     pub fn render<F>(&mut self, mut renderer: F)
-    where F: FnMut(Key, bool)
+    where
+        F: FnMut(Key, bool),
     {
         while let Some(k) = self.emitted_codes.pop_front() {
             renderer(k.0, k.1)

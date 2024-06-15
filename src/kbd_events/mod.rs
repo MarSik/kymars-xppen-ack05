@@ -1,7 +1,8 @@
 use core::time;
-use std::{collections::{HashMap, HashSet}, time::Instant};
-use std::hash::Hash;
 use enumset::{EnumSet, EnumSetType};
+use std::collections::HashMap;
+use std::hash::Hash;
+use std::time::Instant;
 
 pub trait HasState {
     fn has_state(self) -> bool;
@@ -21,14 +22,20 @@ pub enum KeyStateChange<T> {
     LongPress(T),
 }
 
-pub struct ChangeDetector<T> where T: EnumSetType+Hash {
+pub struct ChangeDetector<T>
+where
+    T: EnumSetType + Hash,
+{
     /// T -> time of press, short(F)/long(T)
     state: HashMap<T, (Instant, bool)>,
     /// Computed events that were not yet consumed
     events: Vec<KeyStateChange<T>>,
 }
 
-impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
+impl<T> ChangeDetector<T>
+where
+    T: EnumSetType + Hash + HasState,
+{
     pub fn new() -> Self {
         Self {
             state: HashMap::new(),
@@ -114,6 +121,6 @@ impl <T> ChangeDetector<T> where T: EnumSetType+Hash+HasState {
     }
 
     pub fn has_short_pressed(&self) -> bool {
-        (&self.state).into_iter().any(|i| !i.1.1)
+        (&self.state).into_iter().any(|i| !i.1 .1)
     }
 }
