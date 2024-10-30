@@ -16,7 +16,7 @@ impl VirtualKeyboard {
         }
 
         let mut kbd = VirtualDeviceBuilder::new().unwrap()
-            .name("XP-Pen ACT05 driver")
+            .name("XP-Pen ACK05 driver")
             .with_keys(&keys).unwrap()
             .build()
             .unwrap();

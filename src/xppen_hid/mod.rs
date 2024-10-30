@@ -7,8 +7,8 @@ use crate::layout::types::KeyCoords;
 const PID: u16 = 0x0202;
 const VID: u16 = 0x28bd;
 
-// XP-Pen ACT05
-pub struct XpPenAct05 {
+// XP-Pen ACK05
+pub struct XpPenAck05 {
     device: HidDevice,
 }
 
@@ -76,7 +76,7 @@ pub enum XpPenResult {
     Keys(EnumSet<XpPenButtons>),
 }
 
-impl XpPenAct05 {
+impl XpPenAck05 {
     pub fn new() -> Self {
         let api = hidapi::HidApi::new().unwrap();
 
@@ -103,7 +103,7 @@ impl XpPenAct05 {
         let device = open_keyboard(&api).unwrap();
         println!("Device: {:?}", device);
 
-        // Initialize XP-Pen ACT05
+        // Initialize XP-Pen ACK05
         // This was sniffed from the USB communication between the official application
         // and the device. It switches the protocol to represent each key with one bit
         // instead of sending HID scan codes.

@@ -1,4 +1,4 @@
-# Userspace driver for XP-Pen ACT05 macro keyboard with Krita keymap
+# Userspace driver for XP-Pen ACK05 macro keyboard with Krita keymap
 
 This only works in Linux and was only tested on Fedora Silverblue 39.
 
@@ -20,13 +20,13 @@ or when rotated
 
 Rotary encoder sends pulses as key presses.
 
-## ACT05 protocol
+## ACK05 protocol
 
-By default ACT05 acts as HID device and sends key scan codes directly. The default mapping is however too simple with too few keys that can be used by Krita.
+By default ACK05 acts as HID device and sends key scan codes directly. The default mapping is however too simple with too few keys that can be used by Krita.
 
 The official application is closed source and wants to run as `root`. Not something I like.
 
-A little bit of USB sniffing revealed that the official application sends one packet to ACT05 and switches the device to a bitmask mode, where each key press is represented by one bit in a report.
+A little bit of USB sniffing revealed that the official application sends one packet to ACK05 and switches the device to a bitmask mode, where each key press is represented by one bit in a report.
 
 More can be seen in the [xppen_hid module](src/xppen_hid/mod.rs#L74)
 
@@ -34,10 +34,10 @@ More can be seen in the [xppen_hid module](src/xppen_hid/mod.rs#L74)
 
 An udev rule is needed to give the input group an access to all the necessary input files
 
-/etc/udev/rules.d/90-xppen-act05.rules
+/etc/udev/rules.d/90-xppen-ack05.rules
 
 ```
-# XP-Pen ACT05 USB
+# XP-Pen ACK05 USB
 ATTR{idVendor}=="28bd", ATTR{idProduct}=="0202", MODE="660", GROUP="input"
 
 # /dev/uinput to allow virtual keyboards
@@ -138,7 +138,7 @@ straight lines.
 
 ## Authors and license
 
-Userspace driver for XP-Pen ACT05 macro keyboard with Krita keymap
+Userspace driver for XP-Pen ACK05 macro keyboard with Krita keymap
 
 Copyright (C) 2024  Martin Sivak
 

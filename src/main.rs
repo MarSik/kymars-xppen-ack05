@@ -1,16 +1,16 @@
 use std::thread::sleep;
 use std::time::{self, Duration};
 
-use xppen_act05::layout::switcher::LayerSwitcher;
-use xppen_act05::xppen_hid::{XpPenAct05, XpPenResult};
-use xppen_act05::virtual_keyboard::VirtualKeyboard;
-use xppen_act05::kbd_events::ChangeDetector;
-use xppen_act05::layout::serialization::load_layout;
+use xppen_ack05::layout::switcher::LayerSwitcher;
+use xppen_ack05::xppen_hid::{XpPenAck05, XpPenResult};
+use xppen_ack05::virtual_keyboard::VirtualKeyboard;
+use xppen_ack05::kbd_events::ChangeDetector;
+use xppen_ack05::layout::serialization::load_layout;
 
 
 fn main() {
-    // Open XPPen ACT05
-    let xppen = XpPenAct05::new();
+    // Open XPPen ACK05
+    let xppen = XpPenAck05::new();
 
     // XPPen State machine
     let mut xppen_events = ChangeDetector::new();
